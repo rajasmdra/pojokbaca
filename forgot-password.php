@@ -1,10 +1,41 @@
+<?php
+session_start();
+include 'config/koneksi.php';
+
+// Jika user sudah login, langsung lempar ke dashboard
+if (isset($_SESSION['login_user'])) {
+    header("Location: user/dashboard.php");
+    exit;
+}
+
+$pesan = "";
+
+if (isset($_POST['proses_forgot'])) {
+    $email = mysqli_real_escape_string($mysqli, $_POST['email']);
+
+    // Cek apakah email terdaftar di tabel anggota
+    $query = "SELECT email FROM anggota WHERE email = '$email'";
+    $result = mysqli_query($mysqli, $query);
+
+    if (mysqli_num_rows($result) === 1) {
+        // Jika ada, simpan email ke session untuk divalidasi di halaman berikutnya
+        $_SESSION['reset_email'] = $email;
+        
+        // Alihkan ke halaman input password baru
+        header("Location: new-password.php");
+        exit;
+    } else {
+        $pesan = "<div class='alert alert-danger small'><i class='bi bi-exclamation-triangle-fill me-1'></i> Email tidak ditemukan atau belum terdaftar!</div>";
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="adminHMD authentication page">
-  <title>Forgot Password | adminHMD</title>
+  <title>Forgot Password | PojokBaca</title>
 
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/vendors/bootstrap-icons/bootstrap-icons.css">
@@ -17,18 +48,32 @@
   </button>
   <main class="auth-page">
     <section class="auth-card">
-      <a class="auth-brand" href="index.html"><span class="brand-icon"><i class="bi bi-grid-1x2-fill" aria-hidden="true"></i></span><span><strong>adminHMD</strong><small>Get a reset link for your account.</small></span></a>
+      <a class="auth-brand" href="index.php">
+        <span class="brand-icon"><i class="bi bi-book-half" aria-hidden="true"></i></span>
+        <span><strong>PojokBaca</strong><small>Get a reset access for your account.</small></span>
+      </a>
       <div class="auth-visual"><img src="assets/images/png/dasher-ui-bootstrap-5.jpg" alt="adminHMD dashboard interface"></div>
-      <form class="needs-validation" novalidate>
+      
+      <?= $pesan; ?>
+
+      <form class="needs-validation" method="POST" action="" novalidate>
         <div class="mb-4">
-          <p class="eyebrow mb-1">Secure Access</p>
+          <p class="eyebrow mb-1">Akses Keamanan</p>
           <h1 class="h3 mb-1">Forgot Password</h1>
-          <p class="text-muted mb-0">Get a reset link for your account.</p>
+          <p class="text-muted mb-0">Masukkan email Anda untuk memperbarui password.</p>
         </div>
-        <div class="mb-4"><label class="form-label" for="forgotEmail">Email address</label><input class="form-control" id="forgotEmail" type="email" required><div class="invalid-feedback">Enter a valid email.</div></div>
-        <button class="btn btn-primary w-100" type="submit"><i class="bi bi-envelope-arrow-up" aria-hidden="true"></i> Send Reset Link</button>
+        
+        <div class="mb-4">
+          <label class="form-label" for="forgotEmail">Email address</label>
+          <input class="form-control" id="forgotEmail" type="email" name="email" required placeholder="Masukkan email terdaftar">
+          <div class="invalid-feedback">Enter a valid email.</div>
+        </div>
+        
+        <button class="btn btn-primary w-100" type="submit" name="proses_forgot">
+          <i class="bi bi-envelope-arrow-up" aria-hidden="true"></i> Ubah Password
+        </button>
       </form>
-      <p class="text-muted small mt-3 mb-0">Check your inbox and spam folder after submitting.</p>
+      
       <div class="auth-footer">Remembered it? <a href="index.php">Back to login</a></div>
     </section>
   </main>
