@@ -38,7 +38,7 @@ if (isset($_POST['proses_update_password'])) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Set New Password | PojokBaca</title>
+  <title>PojokBaca | Ubah Password</title>
 
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/vendors/bootstrap-icons/bootstrap-icons.css">
@@ -62,8 +62,8 @@ if (isset($_POST['proses_update_password'])) {
       <?php if(isset($_SESSION['reset_email'])) : ?>
       <form class="needs-validation" method="POST" action="" novalidate>
         <div class="mb-4">
-          <p class="eyebrow mb-1">Langkah Terakhir</p>
-          <h1 class="h3 mb-1">New Password</h1>
+          <p class="eyebrow mb-1">ANGGOTA</p>
+          <h1 class="h3 mb-1">Ubah Password</h1>
           <p class="text-muted mb-0">Mengubah password untuk email: <strong class="text-body"><?= htmlspecialchars($email_target); ?></strong></p>
         </div>
         

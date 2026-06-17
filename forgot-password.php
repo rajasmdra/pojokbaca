@@ -35,7 +35,7 @@ if (isset($_POST['proses_forgot'])) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="adminHMD authentication page">
-  <title>Forgot Password | PojokBaca</title>
+  <title>PojokBaca | Lupa Password</title>
 
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/vendors/bootstrap-icons/bootstrap-icons.css">
@@ -50,7 +50,7 @@ if (isset($_POST['proses_forgot'])) {
     <section class="auth-card">
       <a class="auth-brand" href="index.php">
         <span class="brand-icon"><i class="bi bi-book-half" aria-hidden="true"></i></span>
-        <span><strong>PojokBaca</strong><small>Get a reset access for your account.</small></span>
+        <span><strong>PojokBaca</strong><small>Dapatkan akses reset password akun anda.</small></span>
       </a>
       <div class="auth-visual"><img src="assets/images/png/dasher-ui-bootstrap-5.jpg" alt="adminHMD dashboard interface"></div>
       
@@ -58,8 +58,8 @@ if (isset($_POST['proses_forgot'])) {
 
       <form class="needs-validation" method="POST" action="" novalidate>
         <div class="mb-4">
-          <p class="eyebrow mb-1">Akses Keamanan</p>
-          <h1 class="h3 mb-1">Forgot Password</h1>
+          <p class="eyebrow mb-1">Anggota</p>
+          <h1 class="h3 mb-1">Lupa Password</h1>
           <p class="text-muted mb-0">Masukkan email Anda untuk memperbarui password.</p>
         </div>
         
@@ -74,7 +74,7 @@ if (isset($_POST['proses_forgot'])) {
         </button>
       </form>
       
-      <div class="auth-footer">Remembered it? <a href="index.php">Back to login</a></div>
+      <div class="auth-footer">Ingat Password? <a href="index.php">Kembali ke Halaman Login</a></div>
     </section>
   </main>
 

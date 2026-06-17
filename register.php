@@ -45,7 +45,7 @@ if (isset($_POST['proses_register'])) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register User | RuangPustaka</title>
+  <title>PojokBaca | Daftar Akun</title>
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/vendors/bootstrap-icons/bootstrap-icons.css">
   <link rel="stylesheet" href="assets/css/style.css">
@@ -55,7 +55,7 @@ if (isset($_POST['proses_register'])) {
     <section class="auth-card">
       <a class="auth-brand" href="index.php">
         <span class="brand-icon"><i class="bi bi-book-half" aria-hidden="true"></i></span>
-        <span><strong>RuangPustaka</strong><small>Create your user account.</small></span>
+        <span><strong>PojokBaca</strong><small>Silahkan Buat Akun Anda.</small></span>
       </a>
       <div class="auth-visual"><img src="assets/images/png/dasher-ui-bootstrap-5.jpg" alt="adminHMD dashboard interface"></div>
       
@@ -63,9 +63,9 @@ if (isset($_POST['proses_register'])) {
 
       <form class="needs-validation" method="POST" action="" novalidate>
         <div class="mb-4">
-          <p class="eyebrow mb-1">Akses Mandiri</p>
-          <h1 class="h3 mb-1">Register (Plain Text Mode)</h1>
-          <p class="text-muted mb-0">Lengkapi data diri Anda tanpa enkripsi password.</p>
+          <p class="eyebrow mb-1">Anggota</p>
+          <h1 class="h3 mb-1">Daftar Akun</h1>
+          <p class="text-muted mb-0">Lengkapi data diri Anda untuk daftar  anggota.</p>
         </div>
         <div class="mb-3">
           <label class="form-label" for="registerName">Nama Lengkap</label>
@@ -81,7 +81,7 @@ if (isset($_POST['proses_register'])) {
         </div>
         <div class="mb-3">
           <label class="form-label" for="registerAddress">Alamat Rumah</label>
-          <textarea class="form-control" id="registerAddress" name="alamat" rows="2" required placeholder="Masukkan alamat lengkap"></textarea>
+          <input class="form-control" id="registerAddress" name="alamat" rows="2" required placeholder="Masukkan alamat lengkap"></input>
         </div>
         <div class="mb-3">
           <label class="form-label" for="registerPassword">Password</label>
@@ -95,9 +95,9 @@ if (isset($_POST['proses_register'])) {
           <input class="form-check-input" type="checkbox" id="terms" required>
           <label class="form-check-label" for="terms">Saya menyetujui syarat & ketentuan</label>
         </div>
-        <button class="btn btn-primary w-100" type="submit" name="proses_register">Create Account</button>
+        <button class="btn btn-primary w-100" type="submit" name="proses_register">Daftar</button>
       </form>
-      <div class="auth-footer">Already have an account? <a href="index.php">Sign in</a></div>
+      <div class="auth-footer">Sudah memiliki akun? <a href="index.php">Login</a></div>
     </section>
   </main>
   <script src="assets/js/bootstrap.bundle.min.js"></script>

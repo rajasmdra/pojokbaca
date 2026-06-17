@@ -53,7 +53,7 @@ if (isset($_POST['proses_login'])) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Perpustakaan authentication page">
-  <title>Login Anggota | Perpustakaan</title>
+  <title>Pojokbaca | Login Anggota</title>
 
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/vendors/bootstrap-icons/bootstrap-icons.css">
@@ -68,7 +68,7 @@ if (isset($_POST['proses_login'])) {
     <section class="auth-card">
       <a class="auth-brand" href="index.php">
           <span class="brand-icon"><i class="bi bi-book-half" aria-hidden="true"></i></span>
-          <span><strong>PojokBaca</strong><small>Sign in to your member account.</small></span>
+          <span><strong>PojokBaca</strong><small>Silahkan Login ke Akun Anda.</small></span>
       </a>
       <div class="auth-visual"><img src="assets/images/png/dasher-ui-bootstrap-5.jpg" alt="Perpustakaan interface"></div>
       
@@ -76,33 +76,33 @@ if (isset($_POST['proses_login'])) {
 
       <form class="needs-validation" method="POST" action="" novalidate>
         <div class="mb-4">
-          <p class="eyebrow mb-1">Akses Anggota</p>
+          <p class="eyebrow mb-1">Anggota</p>
           <h1 class="h3 mb-1">Login</h1>
-          <p class="text-muted mb-0">Masuk untuk melihat riwayat peminjaman.</p>
+          <p class="text-muted mb-0">Masuk untuk mengakses akun anda.</p>
         </div>
         
         <div class="mb-3">
-            <label class="form-label" for="loginEmail">Email address</label>
-            <input class="form-control" id="loginEmail" type="email" name="email" required>
-            <div class="invalid-feedback">Enter a valid email.</div>
+            <label class="form-label" for="loginEmail">Email</label>
+            <input class="form-control" id="loginEmail" type="email" name="email" required placeholder="Masukkan Email">
+            <div class="invalid-feedback">Masukkan Email yang Valid.</div>
         </div>
         
         <div class="mb-3">
             <div class="d-flex justify-content-between">
                 <label class="form-label" for="loginPassword">Password</label>
-                <a class="small fw-semibold" href="forgot-password.php">Forgot?</a>
+                <a class="small fw-semibold" href="forgot-password.php">Lupa Password?</a>
             </div>
-            <input class="form-control" id="loginPassword" type="password" name="password" minlength="6" required>
-            <div class="invalid-feedback">Password must be at least 6 characters.</div>
+            <input class="form-control" id="loginPassword" type="password" name="password" minlength="6" required placeholder="Masukkan Password">
+            <div class="invalid-feedback">Password setidaknya harus memiliki 6 karakter.</div>
         </div>
         
         <div class="form-check mb-4">
             <input class="form-check-input" type="checkbox" id="rememberMe">
-            <label class="form-check-label" for="rememberMe">Remember me</label>
+            <label class="form-check-label" for="rememberMe">Ingat saya</label>
         </div>
         
         <button class="btn btn-primary w-100" type="submit" name="proses_login">
-            <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Sign In
+            <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Login
         </button>
       </form>
       
