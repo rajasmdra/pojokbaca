@@ -39,6 +39,42 @@ $buku_dipinjam  = $data_dipinjam['total'] ?? 0;
 $query_denda = mysqli_query($mysqli, "SELECT SUM(jumlah_denda) AS total FROM denda WHERE status_denda = 'belum_bayar'");
 $data_denda  = mysqli_fetch_assoc($query_denda);
 $total_denda_aktif = $data_denda['total'] ?? 0;
+
+
+// ====================================================================
+// DATA TAMBAHAN UNTUK INTEGRASI CHART
+// ====================================================================
+$hari_ini = date('Y-m-d');
+
+// --- 1. Query untuk Pie Chart (3 Status Sirkulasi) ---
+// Selesai / Dikembalikan
+$q_stat_kembali = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM peminjaman WHERE status = 'kembali'");
+$chart_kembali = mysqli_fetch_assoc($q_stat_kembali)['total'] ?? 0;
+
+// Dipinjam & Belum Terlambat (Jatuh tempo >= hari ini)
+$q_stat_dipinjam = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM peminjaman WHERE status = 'dipinjam' AND tgl_jatuh_tempo >= '$hari_ini'");
+$chart_dipinjam = mysqli_fetch_assoc($q_stat_dipinjam)['total'] ?? 0;
+
+// Dipinjam & Sudah Terlambat (Jatuh tempo < hari ini)
+$q_stat_terlambat = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM peminjaman WHERE status = 'dipinjam' AND tgl_jatuh_tempo < '$hari_ini'");
+$chart_terlambat = mysqli_fetch_assoc($q_stat_terlambat)['total'] ?? 0;
+
+
+// --- 2. Query untuk Bar Chart Dinamis ---
+// Jumlah buku per Kategori
+$labels_kategori = []; $data_kategori = [];
+$q_kat = mysqli_query($mysqli, "SELECT k.nama_kategori, COUNT(b.id_buku) AS total FROM kategori k LEFT JOIN buku b ON k.id_kategori = b.id_kategori GROUP BY k.id_kategori");
+while ($r = mysqli_fetch_assoc($q_kat)) { $labels_kategori[] = $r['nama_kategori']; $data_kategori[] = (int)$r['total']; }
+
+// Jumlah buku per Penerbit
+$labels_penerbit = []; $data_penerbit = [];
+$q_pen = mysqli_query($mysqli, "SELECT p.nama_penerbit, COUNT(b.id_buku) AS total FROM penerbit p LEFT JOIN buku b ON p.id_penerbit = b.id_penerbit GROUP BY p.id_penerbit");
+while ($r = mysqli_fetch_assoc($q_pen)) { $labels_penerbit[] = $r['nama_penerbit']; $data_penerbit[] = (int)$r['total']; }
+
+// Jumlah buku per Rak
+$labels_rak = []; $data_rak = [];
+$q_rak = mysqli_query($mysqli, "SELECT r.nama_rak, COUNT(b.id_buku) AS total FROM rak r LEFT JOIN buku b ON r.id_rak = b.id_rak GROUP BY r.id_rak");
+while ($r = mysqli_fetch_assoc($q_rak)) { $labels_rak[] = $r['nama_rak']; $data_rak[] = (int)$r['total']; }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -51,6 +87,7 @@ $total_denda_aktif = $data_denda['total'] ?? 0;
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="../assets/vendors/bootstrap-icons/bootstrap-icons.css">
   <link rel="stylesheet" href="../assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -238,19 +275,38 @@ $total_denda_aktif = $data_denda['total'] ?? 0;
             </div>
           </section>
 
-          <section class="row g-3 mt-2">
-            <div class="col-12">
-              <div class="panel">
-                <div class="panel-header">
+          <section class="row g-3 mt-1">
+            <div class="col-12 col-xl-8">
+              <div class="panel h-100">
+                <div class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                   <div>
-                    <h2 class="h5 mb-1 section-title"><i class="bi bi-lightning-charge" aria-hidden="true"></i><span>Akses Cepat Petugas</span></h2>
-                    <p class="text-muted mb-0">Klik tombol di bawah ini untuk langsung menuju menu operasional sirkulasi.</p>
+                    <h2 class="h5 mb-1 section-title"><i class="bi bi-bar-chart-line" aria-hidden="true"></i><span>Koleksi Berdasarkan Klasifikasi</span></h2>
+                    <p class="text-muted mb-0">Data sebaran inventaris buku dalam sistem perpustakaan.</p>
+                  </div>
+                  <div>
+                    <select class="form-select form-select-sm" id="filterGrafikBuku" style="max-width: 200px;">
+                      <option value="kategori">Berdasarkan Kategori</option>
+                      <option value="penerbit">Berdasarkan Penerbit</option>
+                      <option value="rak">Berdasarkan Lokasi Rak</option>
+                    </select>
                   </div>
                 </div>
-                <div class="p-3 d-flex flex-wrap gap-2">
-                  <a href="peminjaman.php" class="btn btn-primary"><i class="bi bi-arrow-left-right me-2"></i>Kelola Peminjaman</a>
-                  <a href="pengembalian.php" class="btn btn-outline-success"><i class="bi bi-arrow-counterclockwise me-2"></i>Kelola Pengembalian</a>
-                  <a href="buku.php" class="btn btn-outline-secondary"><i class="bi bi-journal-plus me-2"></i>Tambah Koleksi Buku</a>
+                <div class="p-3" style="position: relative; height: 320px;">
+                  <canvas id="canvasBarChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-xl-4">
+              <div class="panel h-100">
+                <div class="panel-header">
+                  <div>
+                    <h2 class="h5 mb-1 section-title"><i class="bi bi-pie-chart" aria-hidden="true"></i><span>Kondisi Sirkulasi Buku</span></h2>
+                    <p class="text-muted mb-0">Rasio sebaran status transaksi peminjaman saat ini.</p>
+                  </div>
+                </div>
+                <div class="p-3 d-flex align-items-center justify-content-center" style="position: relative; height: 320px;">
+                  <canvas id="canvasPieChart"></canvas>
                 </div>
               </div>
             </div>
@@ -269,5 +325,105 @@ $total_denda_aktif = $data_denda['total'] ?? 0;
 
   <script src="../assets/js/bootstrap.bundle.min.js"></script>
   <script src="../assets/js/main.js"></script>
+
+  <script>
+    // 1. DATA TRANSLATION DARI PHP KE JAVASCRIPT OBJECTS
+    const dataBuku = {
+        kategori: {
+            labels: <?= json_encode($labels_kategori); ?>,
+            data: <?= json_encode($data_kategori); ?>
+        },
+        penerbit: {
+            labels: <?= json_encode($labels_penerbit); ?>,
+            data: <?= json_encode($data_penerbit); ?>
+        },
+        rak: {
+            labels: <?= json_encode($labels_rak); ?>,
+            data: <?= json_encode($data_rak); ?>
+        }
+    };
+
+    // 2. RENDER INITIAL BAR CHART (GRAFIK BATANG)
+    const ctxBar = document.getElementById('canvasBarChart').getContext('2d');
+    let barChart = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: dataBuku.kategori.labels,
+            datasets: [{
+                label: 'Jumlah Koleksi Buku',
+                data: dataBuku.kategori.data,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            }
+        }
+    });
+
+    // LOGIKA EVENT LISTENER DROPDOWN INTERAKTIF
+    document.getElementById('filterGrafikBuku').addEventListener('change', function() {
+        const selectedFilter = this.value; 
+        
+        // Ganti data dan label sesuai dengan filter terpilih
+        barChart.data.labels = dataBuku[selectedFilter].labels;
+        barChart.data.datasets[0].data = dataBuku[selectedFilter].data;
+        
+        // Beri variasi warna tema batang agar visualisasi lebih menarik
+        if (selectedFilter === 'penerbit') {
+            barChart.data.datasets[0].backgroundColor = 'rgba(75, 192, 192, 0.7)';
+            barChart.data.datasets[0].borderColor = 'rgba(75, 192, 192, 1)';
+        } else if (selectedFilter === 'rak') {
+            barChart.data.datasets[0].backgroundColor = 'rgba(153, 102, 255, 0.7)';
+            barChart.data.datasets[0].borderColor = 'rgba(153, 102, 255, 1)';
+        } else {
+            barChart.data.datasets[0].backgroundColor = 'rgba(54, 162, 235, 0.7)';
+            barChart.data.datasets[0].borderColor = 'rgba(54, 162, 235, 1)';
+        }
+        
+        barChart.update(); // Memicu transisi animasi pembaruan chart
+    });
+
+    // 3. RENDER PIE CHART (GRAFIK STATUS SIRKULASI)
+    const ctxPie = document.getElementById('canvasPieChart').getContext('2d');
+    new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+            labels: ['Dipinjam', 'Dipinjam & Terlambat', 'Dikembalikan'],
+            datasets: [{
+                data: [
+                    <?= $chart_dipinjam; ?>, 
+                    <?= $chart_terlambat; ?>, 
+                    <?= $chart_kembali; ?>
+                ],
+                backgroundColor: [
+                    '#ffc107', // Kuning (Warning) -> Dipinjam normal
+                    '#dc3545', // Merah (Danger)  -> Terlambat lewat tenggat
+                    '#198754'  // Hijau (Success) -> Dikembalikan/Selesai
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 12, padding: 15 }
+                }
+            }
+        }
+    });
+  </script>
 </body>
 </html>

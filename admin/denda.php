@@ -16,64 +16,85 @@ $query_pending = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM anggota WH
 $data_pending  = mysqli_fetch_assoc($query_pending);
 $anggota_pending = $data_pending['total'] ?? 0;
 
-// 4. Aksi Update Status Denda (Bayar Denda) jika parameter lunas dikirim via URL
-if (isset($_GET['aksi']) && $_GET['aksi'] == 'lunaskan' && isset($_GET['id_denda'])) {
-    $id_denda_proses = $_GET['id_denda'];
-    
-    $sql_lunas = "UPDATE denda SET status_denda = 'lunas' WHERE id_denda = '$id_denda_proses'";
-    if (mysqli_query($mysqli, $sql_lunas)) {
-        $_SESSION['sukses_denda'] = "Status denda berhasil diperbarui menjadi <strong>Lunas</strong>!";
-    } else {
-        $_SESSION['gagal_denda'] = "Gagal memperbarui status denda.";
-    }
-    header("Location: denda.php");
-    exit;
-}
+// 4. Logika Sorting via Header Tabel
+$sort_by    = $_GET['by'] ?? 'status_nyata'; 
+$sort_order = $_GET['order'] ?? 'ASC';       
 
-// 5. Logika Sorting via Header Tabel
-$sort_by    = $_GET['by'] ?? 'status_denda'; // Kolom target default
-$sort_order = $_GET['order'] ?? 'ASC';        // Arah default
-
-// Ambil arah sebaliknya untuk link klik berikutnya (Toggle ASC <=> DESC)
 $next_order = ($sort_order == 'ASC') ? 'DESC' : 'ASC';
-
-// Validasi kolom whitelist (MENAMBAHKAN KUNCI SORT BARU)
-$allowed_columns = ['nama_lengkap', 'judul', 'tgl_pinjam', 'tgl_kembali', 'keterlambatan', 'jumlah_denda', 'status_denda'];
+$allowed_columns = ['nama_lengkap', 'judul', 'total_tagihan', 'status_nyata'];
 $allowed_orders  = ['ASC', 'DESC'];
 
-if (!in_array($sort_by, $allowed_columns)) { $sort_by = 'status_denda'; }
+if (!in_array($sort_by, $allowed_columns)) { $sort_by = 'status_nyata'; }
 if (!in_array($sort_order, $allowed_orders)) { $sort_order = 'ASC'; }
 
-// Pemetaan nama kolom SQL sesungguhnya untuk proses sorting
-if ($sort_by == 'nama_lengkap') {
-    $orderby_sql = "ORDER BY a.nama_lengkap $sort_order";
-} elseif ($sort_by == 'judul') {
-    $orderby_sql = "ORDER BY b.judul $sort_order";
-} elseif ($sort_by == 'tgl_pinjam') {
-    // Pengurutan berdasarkan tanggal pinjam awal sirkulasi
-    $orderby_sql = "ORDER BY p.tgl_pinjam $sort_order";
-} elseif ($sort_by == 'tgl_kembali') {
-    // Pengurutan berdasarkan tanggal pengembalian buku
-    $orderby_sql = "ORDER BY p.tgl_kembali $sort_order";
-} elseif ($sort_by == 'keterlambatan') {
-    // Pengurutan berdasarkan jumlah hari telat (menggunakan CURDATE() jika tanggal pengembalian masih kosong)
-    $orderby_sql = "ORDER BY DATEDIFF(IF(d.status_denda = 'belum_bayar' AND (p.tgl_kembali IS NULL OR p.tgl_kembali = '0000-00-00'), CURDATE(), p.tgl_kembali), p.tgl_jatuh_tempo) $sort_order";
-} elseif ($sort_by == 'jumlah_denda') {
-    $orderby_sql = "ORDER BY d.jumlah_denda $sort_order";
-} else {
-    $orderby_sql = "ORDER BY d.status_denda $sort_order, p.tgl_kembali DESC";
-}
+$orderby_sql = "ORDER BY $sort_by $sort_order";
 
-// 6. Query gabungan mengambil rekam data denda beserta anggota dan buku yang bersangkutan
-$sql_denda = "SELECT d.*, p.tgl_pinjam, p.tgl_jatuh_tempo, p.tgl_kembali, b.judul, a.nama_lengkap 
-              FROM denda d
-              INNER JOIN peminjaman p ON d.id_peminjaman = p.id_peminjaman
-              INNER JOIN buku b ON p.id_buku = b.id_buku
-              INNER JOIN anggota a ON p.id_anggota = a.id_anggota
-              $orderby_sql";
-$query_denda = mysqli_query($mysqli, $sql_denda);
+// Hitung Anggota Baru yang berstatus 'pending' (Butuh Persetujuan)
+$query_pending = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM anggota WHERE status_akun = 'pending'");
+$data_pending  = mysqli_fetch_assoc($query_pending);
+$anggota_pending = $data_pending['total'] ?? 0;
 
-// Fungsi bantu untuk menampilkan icon panah sort yang aktif di header
+// ==========================================================
+// 5. QUERY UNION: TUNGGAKAN AKTIF + HISTORY DENDA LUNAS
+// ==========================================================
+$sql_union = "
+    (
+        -- KONDISI 1: Buku Sudah Kembali tapi ada denda lama yang tertinggal (belum bayar)
+        SELECT 
+            d.id_denda,
+            p.id_peminjaman,
+            a.nama_lengkap,
+            b.judul,
+            IF(d.jumlah_denda IS NULL OR d.jumlah_denda = 0, (DATEDIFF(p.tgl_kembali, p.tgl_jatuh_tempo) * 5000), d.jumlah_denda) AS total_tagihan,
+            'Belum dibayar' AS tipe_denda,
+            'belum_bayar' AS status_nyata
+        FROM denda d
+        INNER JOIN peminjaman p ON d.id_peminjaman = p.id_peminjaman
+        INNER JOIN anggota a ON p.id_anggota = a.id_anggota
+        INNER JOIN buku b ON p.id_buku = b.id_buku
+        WHERE d.status_denda = 'belum_bayar' 
+          AND p.status = 'kembali'
+    )
+    UNION ALL
+    (
+        -- KONDISI 2: Denda Berjalan secara Real-time (Buku belum kembali / masih dipinjam)
+        SELECT 
+            d.id_denda AS id_denda,
+            p.id_peminjaman,
+            a.nama_lengkap,
+            b.judul,
+            (DATEDIFF(CURDATE(), p.tgl_jatuh_tempo) * 5000) AS total_tagihan,
+            'Belum dibayar' AS tipe_denda,
+            'belum_bayar' AS status_nyata
+        FROM peminjaman p
+        INNER JOIN anggota a ON p.id_anggota = a.id_anggota
+        INNER JOIN buku b ON p.id_buku = b.id_buku
+        LEFT JOIN denda d ON p.id_peminjaman = d.id_peminjaman
+        WHERE p.status = 'dipinjam' 
+          AND CURDATE() > p.tgl_jatuh_tempo
+          AND (d.status_denda IS NULL OR d.status_denda = 'belum_bayar')
+    )
+    UNION ALL
+    (
+        -- KONDISI 3: HISTORY / RIWAYAT DENDA YANG SUDAH LUNAS
+        SELECT 
+            d.id_denda,
+            p.id_peminjaman,
+            a.nama_lengkap,
+            b.judul,
+            d.jumlah_denda AS total_tagihan,
+            'Lunas' AS tipe_denda,
+            'lunas' AS status_nyata
+        FROM denda d
+        INNER JOIN peminjaman p ON d.id_peminjaman = p.id_peminjaman
+        INNER JOIN anggota a ON p.id_anggota = a.id_anggota
+        INNER JOIN buku b ON p.id_buku = b.id_buku
+        WHERE d.status_denda = 'lunas'
+    )
+    $orderby_sql";
+
+$query_denda = mysqli_query($mysqli, $sql_union);
+
 function getSortIcon($column, $current_by, $current_order) {
     if ($column === $current_by) {
         return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill text-dark small"></i>' : ' <i class="bi bi-caret-down-fill text-dark small"></i>';
@@ -91,22 +112,9 @@ function getSortIcon($column, $current_by, $current_order) {
   <link rel="stylesheet" href="../assets/vendors/bootstrap-icons/bootstrap-icons.css">
   <link rel="stylesheet" href="../assets/css/style.css">
   <style>
-    th.sortable-header {
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background-color 0.2s;
-    }
-    th.sortable-header:hover {
-      background-color: rgba(0, 0, 0, 0.04) !important;
-    }
-    th.sortable-header a {
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
+    th.sortable-header { cursor: pointer; white-space: nowrap; transition: background-color 0.2s; }
+    th.sortable-header:hover { background-color: rgba(0, 0, 0, 0.04) !important; }
+    th.sortable-header a { text-decoration: none; color: inherit; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   </style>
 </head>
 
@@ -151,6 +159,11 @@ function getSortIcon($column, $current_by, $current_order) {
         <a class="nav-link text-danger" href="../logout.php"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
       </nav>
 
+      <div class="sidebar-user d-none">
+        <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
+        <strong><?= htmlspecialchars($nama_admin); ?></strong>
+        <small>Admin</small>
+      </div>
       <div class="sidebar-user">
         <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
         <strong><?= htmlspecialchars($nama_admin); ?></strong>
@@ -191,35 +204,19 @@ function getSortIcon($column, $current_by, $current_order) {
             <div class="page-heading-copy">
               <span class="page-icon"><i class="bi bi-cash-coin"></i></span>
               <div>
-                <p class="eyebrow mb-1">Sirkulasi Finansial</p>
-                <h1 class="h3 mb-1">Data Denda Keterlambatan</h1>
-                <p class="text-muted mb-0">Kelola dan pantau catatan denda peminjaman buku yang melewati batas waktu pengembalian sirkulasi.</p>
+                <p class="eyebrow mb-1">Keuangan & Sanksi</p>
+                <h1 class="h3 mb-1">Administrasi Tunggakan Denda</h1>
+                <p class="text-muted mb-0">Rekapitulasi denda berjalan anggota sebelum pemulangan buku dilakukan.</p>
               </div>
             </div>
           </div>
 
-          <?php if (isset($_SESSION['sukses_denda'])): ?>
-            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-              <i class="bi bi-check-circle-fill me-2"></i> <?= $_SESSION['sukses_denda']; ?>
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <?php unset($_SESSION['sukses_denda']); ?>
-          <?php endif; ?>
-
-          <?php if (isset($_SESSION['gagal_denda'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-              <i class="bi bi-exclamation-triangle-fill me-2"></i> <?= $_SESSION['gagal_denda']; ?>
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <?php unset($_SESSION['gagal_denda']); ?>
-          <?php endif; ?>
-
           <section class="panel mt-3">
             <div class="panel-header">
               <div>
-                <h2 class="h5 mb-1 section-title"><i class="bi bi-table"></i><span>Log Tagihan & Pembayaran</span></h2>
+                <h2 class="h5 mb-1 section-title"><i class="bi bi-table"></i><span>Daftar Seluruh Tunggakan Aktif</span></h2>
               </div>
-              <input class="form-control form-control-sm table-search" type="search" placeholder="Cari data..." data-table-search="dendaTable" style="max-width: 250px;">
+              <input class="form-control form-control-sm table-search" type="search" placeholder="Cari denda..." data-table-search="dendaTable" style="max-width: 250px;">
             </div>
             
             <div class="table-responsive">
@@ -228,94 +225,60 @@ function getSortIcon($column, $current_by, $current_order) {
                   <tr>
                     <th class="sortable-header">
                       <a href="denda.php?by=nama_lengkap&order=<?= ($sort_by == 'nama_lengkap') ? $next_order : 'ASC'; ?>">
-                        Nama Peminjam <?= getSortIcon('nama_lengkap', $sort_by, $sort_order); ?>
+                        Nama Anggota <?= getSortIcon('nama_lengkap', $sort_by, $sort_order); ?>
                       </a>
                     </th>
                     <th class="sortable-header">
                       <a href="denda.php?by=judul&order=<?= ($sort_by == 'judul') ? $next_order : 'ASC'; ?>">
-                        Buku Terlambat <?= getSortIcon('judul', $sort_by, $sort_order); ?>
-                      </a>
-                    </th>
-                    <!-- FITUR SORT AKTIF: Masa Pinjam -->
-                    <th class="sortable-header">
-                      <a href="denda.php?by=tgl_pinjam&order=<?= ($sort_by == 'tgl_pinjam') ? $next_order : 'ASC'; ?>">
-                        Masa Pinjam <?= getSortIcon('tgl_pinjam', $sort_by, $sort_order); ?>
-                      </a>
-                    </th>
-                    <!-- FITUR SORT AKTIF: Dikembalikan -->
-                    <th class="sortable-header">
-                      <a href="denda.php?by=tgl_kembali&order=<?= ($sort_by == 'tgl_kembali') ? $next_order : 'ASC'; ?>">
-                        Dikembalikan <?= getSortIcon('tgl_kembali', $sort_by, $sort_order); ?>
-                      </a>
-                    </th>
-                    <!-- FITUR SORT AKTIF: Keterlambatan -->
-                    <th class="sortable-header">
-                      <a href="denda.php?by=keterlambatan&order=<?= ($sort_by == 'keterlambatan') ? $next_order : 'ASC'; ?>">
-                        Keterlambatan <?= getSortIcon('keterlambatan', $sort_by, $sort_order); ?>
+                        Buku Bermasalah <?= getSortIcon('judul', $sort_by, $sort_order); ?>
                       </a>
                     </th>
                     <th class="sortable-header">
-                      <a href="denda.php?by=jumlah_denda&order=<?= ($sort_by == 'jumlah_denda') ? $next_order : 'ASC'; ?>">
-                        Total Denda <?= getSortIcon('jumlah_denda', $sort_by, $sort_order); ?>
+                      <a href="denda.php?by=total_tagihan&order=<?= ($sort_by == 'total_tagihan') ? $next_order : 'ASC'; ?>">
+                        Jumlah Denda (Estimasi) <?= getSortIcon('total_tagihan', $sort_by, $sort_order); ?>
                       </a>
                     </th>
                     <th class="sortable-header">
-                      <a href="denda.php?by=status_denda&order=<?= ($sort_by == 'status_denda') ? $next_order : 'ASC'; ?>">
-                        Status <?= getSortIcon('status_denda', $sort_by, $sort_order); ?>
+                      <a href="denda.php?by=status_nyata&order=<?= ($sort_by == 'status_nyata') ? $next_order : 'ASC'; ?>">
+                        Sifat / Tipe <?= getSortIcon('status_nyata', $sort_by, $sort_order); ?>
                       </a>
                     </th>
-                    <th class="text-end" style="min-width: 130px;">Aksi</th>
+                    <th class="text-end" style="min-width: 150px;">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   <?php 
                   if (mysqli_num_rows($query_denda) > 0): 
                     while($row = mysqli_fetch_assoc($query_denda)):
-                      
-                      $status_denda = $row['status_denda'];
-                      $tgl_tempo = strtotime($row['tgl_jatuh_tempo']);
-                      
-                      // LOGIKA BARU: Jika belum bayar / belum dikembalikan, hitung selisih dari tanggal hari ini
-                      if ($status_denda == 'belum_bayar' && (empty($row['tgl_kembali']) || $row['tgl_kembali'] == '0000-00-00')) {
-                          $tgl_hitung = time(); // Menggunakan waktu sekarang/hari ini
-                          $tgl_kembali_view = '<span class="text-muted fw-bold">-</span>';
-                      } else {
-                          $tgl_hitung = strtotime($row['tgl_kembali']);
-                          $tgl_kembali_view = '<span class="fw-medium">' . date('d M Y', $tgl_hitung) . '</span>';
-                      }
-
-                      $selisih_hari = floor(($tgl_hitung - $tgl_tempo) / (60 * 60 * 24));
-                      $hari_telat = ($selisih_hari > 0) ? $selisih_hari . ' Hari' : '0 Hari';
-
-                      if ($status_denda == 'lunas') {
-                          $badge_denda = '<span class="badge text-bg-success"><i class="bi bi-cash me-1"></i>Lunas</span>';
-                      } else {
-                          $badge_denda = '<span class="badge text-bg-danger"><i class="bi bi-clock-history me-1"></i>Belum Bayar</span>';
-                      }
                   ?>
                     <tr>
                       <td class="fw-medium text-primary"><?= htmlspecialchars($row['nama_lengkap']); ?></td>
                       <td>
                         <div class="table-media">
-                          <span class="brand-icon"><i class="bi bi-book-half"></i></span>
-                          <span class="fw-semibold text-truncate" style="max-width: 200px;" title="<?= htmlspecialchars($row['judul']); ?>"><?= htmlspecialchars($row['judul']); ?></span>
+                          <span class="brand-icon"><i class="bi bi-book-half" aria-hidden="true"></i></span>
+                          <span class="text-truncate" style="max-width: 220px;" title="<?= htmlspecialchars($row['judul']); ?>"><?= htmlspecialchars($row['judul']); ?></span>
                         </div>
                       </td>
-                      <td class="small text-muted">
-                        <?= date('d/m/y', strtotime($row['tgl_pinjam'])); ?> s/d <span class="text-danger"><?= date('d/m/y', strtotime($row['tgl_jatuh_tempo'])); ?></span>
+                      <td class="fw-bold <?= ($row['status_nyata'] == 'lunas') ? 'text-success' : 'text-danger'; ?>">
+                        Rp <?= number_format($row['total_tagihan'], 0, ',', '.'); ?>
                       </td>
-                      <td><?= $tgl_kembali_view; ?></td>
-                      <td><span class="badge bg-light text-dark border px-2"><?= $hari_telat; ?></span></td>
-                      <td class="fw-bold">Rp <?= number_format($row['jumlah_denda'], 0, ',', '.'); ?></td>
-                      <td><?= $badge_denda; ?></td>
+                      <td>
+                        <span class="badge <?= ($row['status_nyata'] == 'lunas') ? 'bg-success' : 'bg-danger'; ?> text-white border <?= ($row['status_nyata'] == 'lunas') ? 'border-success' : 'border-danger'; ?> px-2 py-1 rounded-pill small">
+                          <i class="bi bi-hourglass-split me-1"></i><?= $row['tipe_denda']; ?>
+                        </span>
+                      </td>
                       <td class="text-end">
-                        <?php if ($status_denda == 'belum_bayar'): ?>
-                          <a href="denda.php?aksi=lunaskan&id_denda=<?= $row['id_denda']; ?>" class="btn btn-outline-success btn-sm fw-medium px-3 py-1" onclick="return confirm('Apakah denda untuk anggota ini dikonfirmasi telah lunas dibayarkan?')">
-                            <i class="bi bi-check2-circle me-1"></i>Bayar
-                          </a>
-                        <?php else: ?>
-                          <span class="text-success small fw-medium"><i class="bi bi-shield-check me-1 fs-5 align-middle"></i>Terverifikasi</span>
-                        <?php endif; ?>
+                        <div class="d-flex justify-content-end gap-1">
+                          <?php if ($row['status_nyata'] == 'lunas'): ?>
+                            <button class="btn btn-secondary btn-sm px-2 py-1" style="font-size: 0.8rem;" disabled>
+                              <i class="bi bi-check2-all me-1"></i>Selesai
+                            </button>
+                          <?php else: ?>
+                            <a href="peminjaman.php" class="btn btn-primary btn-sm px-2 py-1" style="font-size: 0.8rem;">
+                              <i class="bi bi-arrow-right me-1"></i>Kembalikan & Lunasi
+                            </a>
+                          <?php endif; ?>
+                        </div>
                       </td>
                     </tr>
                   <?php 
@@ -323,8 +286,8 @@ function getSortIcon($column, $current_by, $current_order) {
                   else: 
                   ?>
                     <tr>
-                      <td colspan="8" class="text-center py-4 text-muted">
-                        <i class="bi bi-emoji-smile display-6 d-block mb-2 text-secondary"></i> Bersih dari denda. Belum ada catatan tagihan keterlambatan buku.
+                      <td colspan="5" class="text-center py-4 text-muted">
+                        <i class="bi bi-check-circle display-6 d-block mb-2 text-success"></i> Semua sirkulasi aman! Tidak ada denda berjalan saat ini.
                       </td>
                     </tr>
                   <?php endif; ?>

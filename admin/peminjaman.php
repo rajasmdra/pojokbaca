@@ -16,38 +16,74 @@ $query_pending = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM anggota WH
 $data_pending  = mysqli_fetch_assoc($query_pending);
 $anggota_pending = $data_pending['total'] ?? 0;
 
-// 4. Logika Sorting via Header Tabel
-$sort_by    = $_GET['by'] ?? 'tgl_pinjam'; // Kolom target default
-$sort_order = $_GET['order'] ?? 'DESC';     // Arah default
+// ==========================================================
+// LOGIKA PROSES PENGEMBALIAN BUKU DAN PENGUNCIAN DENDA FINAL
+// ==========================================================
+if (isset($_GET['aksi']) && $_GET['aksi'] == 'kembali' && isset($_GET['id'])) {
+    $id_peminjaman    = mysqli_real_escape_string($mysqli, $_GET['id']);
+    $tanggal_sekarang = date('Y-m-d'); 
 
-// Ambil arah sebaliknya untuk link klik berikutnya (Toggle ASC <=> DESC)
+    // Ambil data peminjaman untuk memeriksa tgl_jatuh_tempo
+    $query_cek = mysqli_query($mysqli, "SELECT * FROM peminjaman WHERE id_peminjaman = '$id_peminjaman'");
+    $data_pinjam = mysqli_fetch_assoc($query_cek);
+
+    if ($data_pinjam) {
+        $tgl_jatuh_tempo = $data_pinjam['tgl_jatuh_tempo'];
+
+        // 1. Update status peminjaman menjadi 'kembali' dan set tanggal kembali
+        $sql_kembali = "UPDATE peminjaman SET status = 'kembali', tgl_kembali = '$tanggal_sekarang' WHERE id_peminjaman = '$id_peminjaman'";
+        mysqli_query($mysqli, $sql_kembali);
+
+        // 2. Hitung denda final saat pengembalian dilakukan jika terlambat
+        if ($tanggal_sekarang > $tgl_jatuh_tempo) {
+            $tgl_sekarang_obj = new DateTime($tanggal_sekarang);
+            $tenggat_obj      = new DateTime($tgl_jatuh_tempo);
+            $selisih          = $tgl_sekarang_obj->diff($tenggat_obj);
+            $jumlah_hari      = $selisih->days;
+
+            $tarif_denda_per_hari = 5000; 
+            $total_denda          = $jumlah_hari * $tarif_denda_per_hari;
+
+            // Masukkan data ke tabel denda, kunci nominalnya, dan set status menjadi 'lunas'
+            $cek_denda = mysqli_query($mysqli, "SELECT * FROM denda WHERE id_peminjaman = '$id_peminjaman'");
+            if (mysqli_num_rows($cek_denda) > 0) {
+                $sql_denda = "UPDATE denda SET jumlah_denda = '$total_denda', status_denda = 'lunas', tgl_bayar = '$tanggal_sekarang' WHERE id_peminjaman = '$id_peminjaman'";
+            } else {
+                $sql_denda = "INSERT INTO denda (id_peminjaman, jumlah_denda, status_denda, tgl_bayar) 
+                              VALUES ('$id_peminjaman', '$total_denda', 'lunas', '$tanggal_sekarang')";
+            }
+            mysqli_query($mysqli, $sql_denda);
+        }
+    }
+    
+    header("Location: peminjaman.php");
+    exit;
+}
+
+// 4. Logika Sorting via Header Tabel
+$sort_by    = $_GET['by'] ?? 'tgl_pinjam';
+$sort_order = $_GET['order'] ?? 'DESC';
 $next_order = ($sort_order == 'ASC') ? 'DESC' : 'ASC';
 
-// Validasi kolom whitelist
-$allowed_columns = ['judul', 'nama_lengkap', 'tgl_pinjam', 'tgl_jatuh_tempo', 'tgl_kembali', 'status'];
+// Tambahkan 'tgl_kembali' ke dalam kolom yang diizinkan
+$allowed_columns = ['nama_lengkap', 'judul', 'tgl_pinjam', 'tgl_jatuh_tempo', 'tgl_kembali', 'status'];
 $allowed_orders  = ['ASC', 'DESC'];
 
 if (!in_array($sort_by, $allowed_columns)) { $sort_by = 'tgl_pinjam'; }
 if (!in_array($sort_order, $allowed_orders)) { $sort_order = 'DESC'; }
 
-// Pemetaan nama kolom SQL sesungguhnya untuk proses sorting
-if ($sort_by == 'judul') {
-    $orderby_sql = "ORDER BY b.judul $sort_order";
-} elseif ($sort_by == 'nama_lengkap') {
-    $orderby_sql = "ORDER BY a.nama_lengkap $sort_order";
-} else {
-    $orderby_sql = "ORDER BY p.$sort_by $sort_order";
-}
+if ($sort_by == 'nama_lengkap') { $sort_col = 'a.nama_lengkap'; }
+elseif ($sort_by == 'judul') { $sort_col = 'b.judul'; }
+else { $sort_col = 'p.' . $sort_by; }
 
-// 5. Jalankan Query Seluruh Data Peminjaman
-$sql_peminjaman = "SELECT p.*, b.judul, a.nama_lengkap 
+// 5. Query Ambil Data Transaksi Peminjaman
+$sql_peminjaman = "SELECT p.*, a.nama_lengkap, b.judul 
                    FROM peminjaman p
-                   INNER JOIN buku b ON p.id_buku = b.id_buku
                    INNER JOIN anggota a ON p.id_anggota = a.id_anggota
-                   $orderby_sql";
+                   INNER JOIN buku b ON p.id_buku = b.id_buku
+                   ORDER BY $sort_col $sort_order";
 $query_peminjaman = mysqli_query($mysqli, $sql_peminjaman);
 
-// Fungsi bantu untuk menampilkan icon panah sort yang aktif di header
 function getSortIcon($column, $current_by, $current_order) {
     if ($column === $current_by) {
         return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill text-dark small"></i>' : ' <i class="bi bi-caret-down-fill text-dark small"></i>';
@@ -60,27 +96,14 @@ function getSortIcon($column, $current_by, $current_order) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PojokBaca | Data Peminjaman</title>
+  <title>PojokBaca | Peminjaman</title>
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="../assets/vendors/bootstrap-icons/bootstrap-icons.css">
   <link rel="stylesheet" href="../assets/css/style.css">
   <style>
-    th.sortable-header {
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background-color 0.2s;
-    }
-    th.sortable-header:hover {
-      background-color: rgba(0, 0, 0, 0.04) !important;
-    }
-    th.sortable-header a {
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
+    th.sortable-header { cursor: pointer; white-space: nowrap; transition: background-color 0.2s; }
+    th.sortable-header:hover { background-color: rgba(0, 0, 0, 0.04) !important; }
+    th.sortable-header a { text-decoration: none; color: inherit; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   </style>
 </head>
 
@@ -91,7 +114,7 @@ function getSortIcon($column, $current_by, $current_order) {
     <aside class="admin-sidebar" id="adminSidebar">
       <div class="sidebar-header">
         <a class="brand-mark" href="dashboard.php">
-          <span class="brand-icon"><i class="bi bi-book-half"></i></span>
+          <span class="brand-icon"><i class="bi bi-book-half" aria-hidden="true"></i></span>
           <span class="brand-copy">
             <span class="brand-title">PojokBaca</span>
             <span class="brand-subtitle">Administrator</span>
@@ -132,7 +155,7 @@ function getSortIcon($column, $current_by, $current_order) {
       </div>
       <div class="sidebar-user">
         <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
-        <strong><?= htmlspecialchars($nama_admin); ?></strong>
+        strong><?= htmlspecialchars($nama_admin); ?></strong>
         <small>Admin</small>
       </div>
     </aside>
@@ -170,47 +193,25 @@ function getSortIcon($column, $current_by, $current_order) {
             <div class="page-heading-copy">
               <span class="page-icon"><i class="bi bi-arrow-left-right"></i></span>
               <div>
-                <p class="eyebrow mb-1">Sirkulasi</p>
-                <h1 class="h3 mb-1">Log Peminjaman Buku</h1>
-                <p class="text-muted mb-0">Manajemen sirkulasi peminjaman, batas sirkulasi waktu pengembalian, dan pencatatan kas log buku.</p>
+                <p class="eyebrow mb-1">Sirkulasi Buku</p>
+                <h1 class="h3 mb-1">Data Peminjaman</h1>
+                <p class="text-muted mb-0">Manajemen sirkulasi peminjaman dan pengembalian buku perpustakaan.</p>
               </div>
             </div>
             <div>
-              <a href="peminjaman-tambah.php" class="btn btn-primary px-4 shadow-sm">
-                <i class="bi bi-plus-circle me-1"></i> Tambah Peminjaman
+              <a href="peminjaman-tambah.php" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-plus-lg"></i>
+                <span>Tambah Peminjaman</span>
               </a>
             </div>
           </div>
 
-          <?php if (isset($_SESSION['sukses_pinjam'])): ?>
-            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-              <i class="bi bi-check-circle-fill me-2"></i> <?= $_SESSION['sukses_pinjam']; ?>
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <?php unset($_SESSION['sukses_pinjam']); ?>
-          <?php endif; ?>
-
-          <?php if (isset($_SESSION['sukses_kembali'])): ?>
-            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-              <i class="bi bi-check-circle-fill me-2"></i> <?= $_SESSION['sukses_kembali']; ?>
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <?php unset($_SESSION['sukses_kembali']); ?>
-          <?php endif; ?>
-
-          <?php if (isset($_SESSION['gagal_kembali'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-              <i class="bi bi-exclamation-triangle-fill me-2"></i> <?= $_SESSION['gagal_kembali']; ?>
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <?php unset($_SESSION['gagal_kembali']); ?>
-          <?php endif; ?>
           <section class="panel mt-3">
             <div class="panel-header">
               <div>
-                <h2 class="h5 mb-1 section-title"><i class="bi bi-table"></i><span>Data Transaksi Aktif & Selesai</span></h2>
+                <h2 class="h5 mb-1 section-title"><i class="bi bi-table"></i><span>Daftar Seluruh Peminjaman</span></h2>
               </div>
-              <input class="form-control form-control-sm table-search" type="search" placeholder="Cari data..." data-table-search="peminjamanTable" style="max-width: 250px;">
+              <input class="form-control form-control-sm table-search" type="search" placeholder="Cari peminjaman..." data-table-search="peminjamanTable" style="max-width: 250px;">
             </div>
             
             <div class="table-responsive">
@@ -218,23 +219,23 @@ function getSortIcon($column, $current_by, $current_order) {
                 <thead>
                   <tr>
                     <th class="sortable-header">
+                      <a href="peminjaman.php?by=nama_lengkap&order=<?= ($sort_by == 'nama_lengkap') ? $next_order : 'ASC'; ?>">
+                        Nama Anggota <?= getSortIcon('nama_lengkap', $sort_by, $sort_order); ?>
+                      </a>
+                    </td>
+                    <th class="sortable-header">
                       <a href="peminjaman.php?by=judul&order=<?= ($sort_by == 'judul') ? $next_order : 'ASC'; ?>">
                         Judul Buku <?= getSortIcon('judul', $sort_by, $sort_order); ?>
                       </a>
                     </th>
                     <th class="sortable-header">
-                      <a href="peminjaman.php?by=nama_lengkap&order=<?= ($sort_by == 'nama_lengkap') ? $next_order : 'ASC'; ?>">
-                        Nama Peminjam <?= getSortIcon('nama_lengkap', $sort_by, $sort_order); ?>
-                      </a>
-                    </th>
-                    <th class="sortable-header">
-                      <a href="peminjaman.php?by=tgl_pinjam&order=<?= ($sort_by == 'tgl_pinjam') ? $next_order : 'DESC'; ?>">
+                      <a href="peminjaman.php?by=tgl_pinjam&order=<?= ($sort_by == 'tgl_pinjam') ? $next_order : 'ASC'; ?>">
                         Tanggal Pinjam <?= getSortIcon('tgl_pinjam', $sort_by, $sort_order); ?>
                       </a>
                     </th>
                     <th class="sortable-header">
                       <a href="peminjaman.php?by=tgl_jatuh_tempo&order=<?= ($sort_by == 'tgl_jatuh_tempo') ? $next_order : 'ASC'; ?>">
-                         Jatuh Tempo <?= getSortIcon('tgl_jatuh_tempo', $sort_by, $sort_order); ?>
+                        Tenggat Waktu <?= getSortIcon('tgl_jatuh_tempo', $sort_by, $sort_order); ?>
                       </a>
                     </th>
                     <th class="sortable-header">
@@ -253,45 +254,44 @@ function getSortIcon($column, $current_by, $current_order) {
                 <tbody>
                   <?php 
                   if (mysqli_num_rows($query_peminjaman) > 0): 
+                    $hari_ini = date('Y-m-d');
                     while($row = mysqli_fetch_assoc($query_peminjaman)):
-                      $tgl_kembali_tampil = ($row['tgl_kembali'] != NULL) ? date('d M Y', strtotime($row['tgl_kembali'])) : '<span class="text-muted italic">-</span>';
                       
-                      $status = $row['status'];
-                      if ($status == 'kembali') {
-                          $badge_status = '<span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>Selesai</span>';
-                      } elseif ($status == 'dipinjam') {
-                          $hari_ini = date('Y-m-d');
-                          if ($hari_ini > $row['tgl_jatuh_tempo']) {
-                              $badge_status = '<span class="badge text-bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Terlambat</span>';
-                          } else {
-                              $badge_status = '<span class="badge text-bg-warning text-dark"><i class="bi bi-clock me-1"></i>Dipinjam</span>';
-                          }
+                      // Penentuan Tanggal Kembali fisik
+                      $tgl_kembali = ($row['tgl_kembali'] && $row['tgl_kembali'] != '0000-00-00') ? date('d/m/Y', strtotime($row['tgl_kembali'])) : '-';
+
+                      // Logika Penentuan 3 Status (dipinjam, terlambat, kembali)
+                      if ($row['status'] == 'kembali') {
+                          $status_badge = '<span class="badge bg-success text-white border border-success px-2 py-1 rounded-pill small"><i class="bi bi-check-circle me-1"></i>Kembali</span>';
+                      } elseif ($row['status'] == 'dipinjam' && $hari_ini > $row['tgl_jatuh_tempo']) {
+                          $status_badge = '<span class="badge bg-danger text-white border border-danger px-2 py-1 rounded-pill small"><i class="bi bi-exclamation-triangle me-1"></i>Terlambat</span>';
                       } else {
-                          $badge_status = '<span class="badge text-bg-dark">'.ucfirst($status).'</span>';
+                          $status_badge = '<span class="badge bg-warning text-white border border-warning px-2 py-1 rounded-pill small"><i class="bi bi-hourglass-split me-1"></i>Dipinjam</span>';
                       }
                   ?>
                     <tr>
+                      <td class="fw-medium text-primary"><?= htmlspecialchars($row['nama_lengkap']); ?></td>
                       <td>
                         <div class="table-media">
-                          <span class="brand-icon"><i class="bi bi-book-half"></i></span>
-                          <span class="fw-semibold text-truncate" style="max-width: 220px;" title="<?= htmlspecialchars($row['judul']); ?>"><?= htmlspecialchars($row['judul']); ?></span>
+                          <span class="brand-icon"><i class="bi bi-book-half" aria-hidden="true"></i></span>
+                          <span class="text-truncate" style="max-width: 220px;" title="<?= htmlspecialchars($row['judul']); ?>"><?= htmlspecialchars($row['judul']); ?></span>
                         </div>
                       </td>
-                      <td class="fw-medium text-primary"><?= htmlspecialchars($row['nama_lengkap']); ?></td>
-                      <td><?= date('d M Y', strtotime($row['tgl_pinjam'])); ?></td>
-                      <td><span class="text-danger fw-medium"><?= date('d M Y', strtotime($row['tgl_jatuh_tempo'])); ?></span></td>
-                      <td><?= $tgl_kembali_tampil; ?></td>
-                      <td><?= $badge_status; ?></td>
+                      <td><?= date('d/m/Y', strtotime($row['tgl_pinjam'])); ?></td>
+                      <td class="fw-semibold"><?= date('d/m/Y', strtotime($row['tgl_jatuh_tempo'])); ?></td>
+                      <td><?= $tgl_kembali; ?></td>
+                      <td><?= $status_badge; ?></td>
                       <td class="text-end">
                         <div class="d-flex justify-content-end gap-1">
-                          <?php if ($status == 'dipinjam'): ?>
-                            <a href="peminjaman-kembali.php?id=<?= $row['id_peminjaman']; ?>" class="btn btn-success btn-sm fw-medium px-2 py-1" onclick="return confirm('Apakah Anda yakin ingin memproses konfirmasi pengembalian untuk buku ini?')">
-                              <i class="bi bi-arrow-counterclockwise me-1"></i>Kembali
+                          <?php if ($row['status'] == 'dipinjam'): ?>
+                            <a href="peminjaman.php?id=<?= $row['id_peminjaman']; ?>&aksi=kembali" class="btn btn-primary btn-sm px-2 py-1" style="font-size: 0.8rem;" onclick="return confirm('Apakah Anda yakin ingin menyelesaikan peminjaman ini?')">
+                              <i class="bi bi-arrow-left me-1"></i>Kembalikan
                             </a>
+                          <?php else: ?>
+                            <button class="btn btn-secondary btn-sm px-2 py-1" style="font-size: 0.8rem;" disabled>
+                              <i class="bi bi-check2-all me-1"></i>Selesai
+                            </button>
                           <?php endif; ?>
-                          <a href="buku.php?id=<?= $row['id_buku']; ?>" class="btn btn-light btn-sm text-secondary px-2 py-1" title="Detail Buku">
-                            <i class="bi bi-info-circle"></i>
-                          </a>
                         </div>
                       </td>
                     </tr>
@@ -301,7 +301,7 @@ function getSortIcon($column, $current_by, $current_order) {
                   ?>
                     <tr>
                       <td colspan="7" class="text-center py-4 text-muted">
-                        <i class="bi bi-hourglass-split display-6 d-block mb-2"></i> Belum ada data sirkulasi peminjaman.
+                        Tidak ada data peminjaman.
                       </td>
                     </tr>
                   <?php endif; ?>

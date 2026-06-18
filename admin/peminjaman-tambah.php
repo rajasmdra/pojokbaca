@@ -21,6 +21,11 @@ $query_anggota = mysqli_query($mysqli, $sql_anggota);
 $sql_buku = "SELECT id_buku, judul, stok_tersedia FROM buku WHERE stok_tersedia > 0 ORDER BY judul ASC";
 $query_buku = mysqli_query($mysqli, $sql_buku);
 
+// Hitung Anggota Baru yang berstatus 'pending' (Butuh Persetujuan)
+$query_pending = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM anggota WHERE status_akun = 'pending'");
+$data_pending  = mysqli_fetch_assoc($query_pending);
+$anggota_pending = $data_pending['total'] ?? 0;
+
 // 5. Proses Insert Data ketika Form di-submit
 $pesan_sukses = "";
 $pesan_gagal  = "";
@@ -90,7 +95,12 @@ if (isset($_POST['submit'])) {
       <nav class="sidebar-nav">
         <a class="nav-link" href="dashboard.php"><span class="nav-icon"><i class="bi bi-speedometer2"></i></span><span class="nav-text">Dashboard</span></a>
         <a class="nav-link" href="katalog.php"><span class="nav-icon"><i class="bi bi-journal-text"></i></span><span class="nav-text">Data Buku</span></a>
-        <a class="nav-link" href="anggota.php"><span class="nav-icon"><i class="bi bi-people"></i></span><span class="nav-text">Data Anggota</span></a>
+        <a class="nav-link" href="anggota.php">
+          <span class="nav-icon"><i class="bi bi-people"></i></span><span class="nav-text">Data Anggota</span>
+          <?php if($anggota_pending > 0): ?>
+            <span class="badge bg-warning text-dark ms-auto px-2 rounded-pill"><?= $anggota_pending; ?></span>
+          <?php endif; ?>
+        </a>
         <a class="nav-link active" href="peminjaman.php"><span class="nav-icon"><i class="bi bi-arrow-left-right"></i></span><span class="nav-text">Peminjaman</span></a>
         <a class="nav-link" href="denda.php"><span class="nav-icon"><i class="bi bi-cash-coin"></i></span><span class="nav-text">Data Denda</span></a>
         

@@ -12,7 +12,37 @@ include '../config/koneksi.php';
 $nama_anggota = $_SESSION['nama_anggota'] ?? 'Anggota';
 $id_anggota   = $_SESSION['id_anggota'];
 
-// 3. Ambil Data Statistik Riil dari Database berdasarkan ID Anggota yang Login
+// 3. Ambil Aturan Batas Maksimal & Tarif Denda dari Tabel Pengaturan secara Dinamis
+$query_setting = mysqli_query($mysqli, "SELECT * FROM denda LIMIT 1");
+$setting = mysqli_fetch_assoc($query_setting);
+$maks_buku = $setting['maks_buku_pinjam'] ?? 3;
+$durasi_hari = $setting['durasi_pinjam_hari'] ?? 7;
+$tarif_denda = $setting['tarif_denda_perhari'] ?? 5000;
+
+// ====================================================================
+// SINKRONISASI OTOMATIS: GENERATE BARIS BARU & UPDATE DENDA TIAP HARI
+// ====================================================================
+
+// Langkah A: Otomatis buat baris baru di tabel denda jika buku melewati jatuh tempo tapi belum terdaftar
+mysqli_query($mysqli, "INSERT INTO denda (id_peminjaman, jumlah_denda, status_denda)
+                       SELECT p.id_peminjaman, 0, 'belum_bayar'
+                       FROM peminjaman p
+                       LEFT JOIN denda d ON p.id_peminjaman = d.id_peminjaman
+                       WHERE p.status = 'dipinjam' 
+                         AND CURDATE() > p.tgl_jatuh_tempo
+                         AND d.id_denda IS NULL");
+
+// Langkah B: Otomatis perbarui nilai rupiah denda yang masih berjalan di tabel denda secara real-time
+mysqli_query($mysqli, "UPDATE denda d
+                       JOIN peminjaman p ON d.id_peminjaman = p.id_peminjaman
+                       SET d.jumlah_denda = DATEDIFF(CURDATE(), p.tgl_jatuh_tempo) * $tarif_denda
+                       WHERE d.status_denda = 'belum_bayar' 
+                         AND p.status = 'dipinjam' 
+                         AND CURDATE() > p.tgl_jatuh_tempo");
+
+// ====================================================================
+
+// 4. Ambil Data Statistik Riil dari Database berdasarkan ID Anggota yang Login
 // Hitung Buku yang Sedang Dipinjam (status = 'sedang dipinjam')
 $query_pinjam = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM peminjaman WHERE id_anggota = '$id_anggota' AND status = 'dipinjam'");
 $data_pinjam  = mysqli_fetch_assoc($query_pinjam);
@@ -23,7 +53,7 @@ $query_total = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM peminjaman W
 $data_total  = mysqli_fetch_assoc($query_total);
 $total_peminjaman = $data_total['total'];
 
-// Hitung Total Akumulasi Denda yang BELUM LUNAS milik Anggota Ini
+// Hitung Total Akumulasi Denda yang BELUM LUNAS milik Anggota Ini (Langsung mengambil data bersih dari tabel denda)
 $query_denda = mysqli_query($mysqli, "SELECT SUM(d.jumlah_denda) AS total_tagihan, COUNT(d.id_denda) AS jumlah_pelanggaran 
                                       FROM denda d 
                                       JOIN peminjaman p ON d.id_peminjaman = p.id_peminjaman 
@@ -31,13 +61,6 @@ $query_denda = mysqli_query($mysqli, "SELECT SUM(d.jumlah_denda) AS total_tagiha
 $data_denda  = mysqli_fetch_assoc($query_denda);
 $tanggungan_denda = $data_denda['total_tagihan'] ?? 0;
 $jumlah_denda_aktif = $data_denda['jumlah_pelanggaran'] ?? 0;
-
-// 4. Ambil Aturan Batas Maksimal & Tarif Denda dari Tabel Pengaturan secara Dinamis
-$query_setting = mysqli_query($mysqli, "SELECT * FROM denda LIMIT 1");
-$setting = mysqli_fetch_assoc($query_setting);
-$maks_buku = $setting['maks_buku_pinjam'] ?? 3;
-$durasi_hari = $setting['durasi_pinjam_hari'] ?? 7;
-$tarif_denda = $setting['tarif_denda_perhari'] ?? 2000;
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -12,18 +12,32 @@ include '../config/koneksi.php';
 $nama_anggota = $_SESSION['nama_anggota'] ?? 'Anggota';
 $id_anggota   = $_SESSION['id_anggota'];
 
-// Tarif denda per hari
-$tarif_denda_per_hari = 2000;
+// Ambil tarif denda dinamis dari database (jika ada tabel pengaturan), atau gunakan default 2000
+$tarif_denda_per_hari = 5000;
 
 // ====================================================================
-// STEP BARU: UPDATE OTOMATIS KE DATABASE SETIAP HALAMAN INI DIBUKA
+// LOGIKA OTOMATISASI: GENERATE BARU & UPDATE DENDA TIAP HARI
 // ====================================================================
-mysqli_query($mysqli, "UPDATE denda d
-                       JOIN peminjaman p ON d.id_peminjaman = p.id_peminjaman
-                       SET d.jumlah_denda = DATEDIFF(CURDATE(), p.tgl_jatuh_tempo) * $tarif_denda_per_hari
-                       WHERE d.status_denda = 'belum_bayar' 
-                         AND p.status = 'dipinjam' 
-                         AND CURDATE() > p.tgl_jatuh_tempo");
+
+// TUGAS A: Otomatis INSERT baris denda baru jika ada peminjaman yang lewat tempo tapi belum terdaftar di tabel denda
+$sql_auto_insert = "INSERT INTO denda (id_peminjaman, jumlah_denda, status_denda)
+                    SELECT p.id_peminjaman, 0, 'belum_bayar'
+                    FROM peminjaman p
+                    LEFT JOIN denda d ON p.id_peminjaman = d.id_peminjaman
+                    WHERE p.status = 'dipinjam' 
+                      AND CURDATE() > p.tgl_jatuh_tempo
+                      AND d.id_denda IS NULL";
+mysqli_query($mysqli, $sql_auto_insert);
+
+// TUGAS B: Otomatis UPDATE jumlah denda berjalan yang belum lunas berdasarkan selisih hari real-time
+$sql_auto_update = "UPDATE denda d
+                    JOIN peminjaman p ON d.id_peminjaman = p.id_peminjaman
+                    SET d.jumlah_denda = DATEDIFF(CURDATE(), p.tgl_jatuh_tempo) * $tarif_denda_per_hari
+                    WHERE d.status_denda = 'belum_bayar' 
+                      AND p.status = 'dipinjam' 
+                      AND CURDATE() > p.tgl_jatuh_tempo";
+mysqli_query($mysqli, $sql_auto_update);
+
 // ====================================================================
 
 
@@ -35,8 +49,7 @@ $query_badge_denda = mysqli_query($mysqli, "SELECT COUNT(d.id_denda) AS jumlah_p
 $data_badge = mysqli_fetch_assoc($query_badge_denda);
 $jumlah_denda_aktif = $data_badge['jumlah_pelanggaran'] ?? 0;
 
-// 4. Kueri Utama: Mengambil riwayat denda yang sudah ter-update untuk tabel HTML
-// Kolom jumlah_denda sekarang langsung mengambil dari d.jumlah_denda hasil update di atas
+// 4. Kueri Utama: Mengambil data denda langsung dari tabel denda yang sudah disinkronisasi di atas
 $sql_denda = "SELECT 
                 d.id_denda,
                 p.id_peminjaman,
@@ -44,6 +57,7 @@ $sql_denda = "SELECT
                 p.tgl_pinjam,
                 p.tgl_jatuh_tempo,
                 p.tgl_kembali,
+                p.status AS status_pinjam,
                 d.status_denda,
                 d.tgl_bayar,
                 d.jumlah_denda
@@ -55,7 +69,6 @@ $sql_denda = "SELECT
 
 $query_tabel_denda = mysqli_query($mysqli, $sql_denda);
 ?>
-<!-- Sisa kode HTML struktur halaman denda dan tabel ke bawah tetap sama... -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,7 +86,6 @@ $query_tabel_denda = mysqli_query($mysqli, $sql_denda);
   <div class="admin-shell">
     <div class="sidebar-backdrop" data-sidebar-close></div>
 
-    <!-- SIDEBAR -->
     <aside class="admin-sidebar" id="adminSidebar" aria-label="Main navigation">
       <div class="sidebar-header">
         <a class="brand-mark" href="dashboard.php" aria-label="PojokBaca dashboard">
@@ -174,12 +186,11 @@ $query_tabel_denda = mysqli_query($mysqli, $sql_denda);
               <div>
                 <p class="eyebrow mb-1">Keuangan</p>
                 <h1 class="h3 mb-1">Informasi Denda</h1>
-                <p class="text-muted mb-0">Pantau akumulasi denda keterlambatan pengembalian buku Anda.</p>
+                <p class="text-muted mb-0">Pantau denda keterlambatan pengembalian buku Anda.</p>
               </div>
             </div>
           </div>
 
-          <!-- Alert Pemberitahuan Denda Berjalan -->
           <?php if($jumlah_denda_aktif > 0): ?>
             <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center" role="alert">
               <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
@@ -193,7 +204,7 @@ $query_tabel_denda = mysqli_query($mysqli, $sql_denda);
             <div class="panel-header">
               <div>
                 <h2 class="h5 mb-1 section-title"><i class="bi bi-list-ol" aria-hidden="true"></i><span>Daftar Transaksi Denda</span></h2>
-                <p class="text-muted mb-0">Rincian perhitungan denda lnas maupun denda berjalan.</p>
+                <p class="text-muted mb-0">Rincian perhitungan denda lunas maupun denda berjalan.</p>
               </div>
             </div>
             
@@ -223,7 +234,12 @@ $query_tabel_denda = mysqli_query($mysqli, $sql_denda);
                           // Jika belum_bayar
                           $status_badge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Belum Bayar</span>';
                           $tgl_bayar = '<span class="text-muted small">-</span>';
-                          $tgl_kembali = '<span class="badge bg-warning text-dark">Masih Dipinjam</span>';
+                          
+                          if($denda['status_pinjam'] == 'dipinjam') {
+                              $tgl_kembali = '<span class="badge bg-warning text-dark">Masih Dipinjam</span>';
+                          } else {
+                              $tgl_kembali = date('d M Y', strtotime($denda['tgl_kembali']));
+                          }
                       }
                   ?>
                     <tr>
