@@ -95,7 +95,6 @@ function getSortIcon($column, $current_by, $current_order) {
           <?php endif; ?>
         </a>
         <a class="nav-link" href="peminjaman.php"><span class="nav-icon"><i class="bi bi-arrow-left-right"></i></span><span class="nav-text">Peminjaman</span></a>
-        <a class="nav-link" href="pengembalian.php"><span class="nav-icon"><i class="bi bi-arrow-counterclockwise"></i></span><span class="nav-text">Pengembalian</span></a>
         <a class="nav-link" href="denda.php"><span class="nav-icon"><i class="bi bi-cash-coin"></i></span><span class="nav-text">Data Denda</span></a>
         
         <div class="nav-item-dropdown">
@@ -103,9 +102,9 @@ function getSortIcon($column, $current_by, $current_order) {
             <span class="nav-icon"><i class="bi bi-gear"></i></span><span class="nav-text">Kelola</span>
           </a>
           <div class="collapse ms-3" id="menuKelola">
-            <a class="nav-link py-1 small" href="kelola/kategori.php"><i class="bi bi-tags me-2"></i>Kategori</a>
-            <a class="nav-link py-1 small" href="kelola/penerbit.php"><i class="bi bi-building me-2"></i>Penerbit</a>
-            <a class="nav-link py-1 small" href="kelola/rak.php"><i class="bi bi-bookshelf me-2"></i>Data Rak</a>
+            <a class="nav-link py-1 small" href="kategori.php"><i class="bi bi-tags me-2"></i>Kategori</a>
+            <a class="nav-link py-1 small" href="penerbit.php"><i class="bi bi-building me-2"></i>Penerbit</a>
+            <a class="nav-link py-1 small" href="rak.php"><i class="bi bi-bookshelf me-2"></i>Data Rak</a>
           </div>
         </div>
 
@@ -113,6 +112,11 @@ function getSortIcon($column, $current_by, $current_order) {
         <a class="nav-link text-danger" href="../logout.php"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
       </nav>
       
+      <div class="sidebar-user d-none">
+        <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="User">
+        <strong><?= htmlspecialchars($nama_admin); ?></strong>
+        <small>Admin</small>
+      </div>
       <div class="sidebar-user">
         <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="User">
         <strong><?= htmlspecialchars($nama_admin); ?></strong>
@@ -123,17 +127,24 @@ function getSortIcon($column, $current_by, $current_order) {
     <div class="admin-main">
       <nav class="navbar admin-navbar navbar-expand bg-white">
         <div class="container-fluid px-3 px-lg-4">
-          <button class="sidebar-toggle" type="button" data-sidebar-toggle><span></span><span></span><span></span></button>
+          <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-controls="adminSidebar" aria-expanded="true" aria-label="Toggle sidebar">
+            <span></span><span></span><span></span>
+          </button>
+
           <div class="navbar-actions ms-auto">
+            <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme" title="Switch color theme">
+              <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
+            </button>
+
             <div class="dropdown">
-              <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <img class="avatar-img avatar-sm" src="../assets/images/avatar/avatar.jpg" alt="User">
+              <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <img class="avatar-img avatar-sm" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
                 <span class="d-none d-sm-inline"><?= htmlspecialchars($nama_admin); ?></span>
               </button>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-left me-2"></i>Sign out</a></li>
+                <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
               </ul>
             </div>
           </div>
@@ -152,19 +163,14 @@ function getSortIcon($column, $current_by, $current_order) {
                 <p class="text-muted mb-0 font-sans-serif">Kelola hak akses, validasi pendaftaran, dan data profil anggota aktif.</p>
               </div>
             </div>
-            <div>
-              <a href="tambah_anggota.php" class="btn btn-primary px-4 shadow-sm">
-                <i class="bi bi-person-plus me-1"></i> Tambah Anggota
-              </a>
-            </div>
           </div>
 
           <div class="panel border-0 shadow-sm overflow-hidden p-4">
             <div class="table-responsive">
-              <table class="table table-striped align-middle text-dark mb-0">
-                <thead class="table-light">
+              <table class="table align-middle text-dark mb-0">
+                <thead>
                   <tr>
-                    <th style="width: 60px;">No</th>
+                    <th>No</th>
                     <th class="sortable-header">
                       <a href="anggota.php?by=nama_lengkap&order=<?= ($sort_by == 'nama_lengkap') ? $next_order : 'ASC'; ?>">
                         Nama Anggota <?= getSortIcon('nama_lengkap', $sort_by, $sort_order); ?>
@@ -189,7 +195,10 @@ function getSortIcon($column, $current_by, $current_order) {
                   ?>
                     <tr>
                       <td><?= $no++; ?></td>
-                      <td class="fw-semibold text-primary"><?= htmlspecialchars($row['nama_lengkap'] ?? ($row['nama'] ?? '')); ?></td>
+                      <td class="fw-semibold text-primary d-flex align-items-center gap-2">
+                        <span class="brand-icon"><i class="bi bi-person-fill fs-4"></i></span>
+                        <?= htmlspecialchars($row['nama_lengkap'] ?? ($row['nama'] ?? '')); ?>
+                      </td>
                       <td><?= htmlspecialchars($row['email']); ?></td>
                       <td><?= htmlspecialchars($row['no_telepon'] ?? '-'); ?></td>
                       <td>

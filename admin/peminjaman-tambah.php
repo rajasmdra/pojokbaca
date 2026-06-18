@@ -92,18 +92,59 @@ if (isset($_POST['submit'])) {
         <a class="nav-link" href="katalog.php"><span class="nav-icon"><i class="bi bi-journal-text"></i></span><span class="nav-text">Data Buku</span></a>
         <a class="nav-link" href="anggota.php"><span class="nav-icon"><i class="bi bi-people"></i></span><span class="nav-text">Data Anggota</span></a>
         <a class="nav-link active" href="peminjaman.php"><span class="nav-icon"><i class="bi bi-arrow-left-right"></i></span><span class="nav-text">Peminjaman</span></a>
-        <a class="nav-link" href="pengembalian.php"><span class="nav-icon"><i class="bi bi-arrow-counterclockwise"></i></span><span class="nav-text">Pengembalian</span></a>
         <a class="nav-link" href="denda.php"><span class="nav-icon"><i class="bi bi-cash-coin"></i></span><span class="nav-text">Data Denda</span></a>
+        
+        <div class="nav-item-dropdown">
+          <a class="nav-link dropdown-toggle" href="#menuKelola" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="menuKelola">
+            <span class="nav-icon"><i class="bi bi-gear"></i></span><span class="nav-text">Kelola</span>
+          </a>
+          <div class="collapse ms-3" id="menuKelola">
+            <a class="nav-link py-1 small" href="kategori.php"><i class="bi bi-tags me-2"></i>Kategori</a>
+            <a class="nav-link py-1 small" href="penerbit.php"><i class="bi bi-building me-2"></i>Penerbit</a>
+            <a class="nav-link py-1 small" href="rak.php"><i class="bi bi-bookshelf me-2"></i>Data Rak</a>
+          </div>
+        </div>
+
         <hr class="mx-3 my-2 text-secondary opacity-25">
         <a class="nav-link text-danger" href="../logout.php"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
       </nav>
+
+      <div class="sidebar-user d-none">
+        <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
+        <strong><?= htmlspecialchars($nama_admin); ?></strong>
+        <small>Admin</small>
+      </div>
+      <div class="sidebar-user">
+        <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
+        <strong><?= htmlspecialchars($nama_admin); ?></strong>
+        <small>Admin</small>
+      </div>
     </aside>
 
     <div class="admin-main">
-      <nav class="navbar admin-navbar navbar-expand bg-white px-3 px-lg-4">
-        <button class="sidebar-toggle" type="button" data-sidebar-toggle><span></span><span></span><span></span></button>
-        <div class="navbar-actions ms-auto">
-          <span class="fw-medium d-none d-sm-inline text-secondary">Logged in as: <strong><?= htmlspecialchars($nama_admin); ?></strong></span>
+      <nav class="navbar admin-navbar navbar-expand bg-white">
+        <div class="container-fluid px-3 px-lg-4">
+          <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-controls="adminSidebar" aria-expanded="true" aria-label="Toggle sidebar">
+            <span></span><span></span><span></span>
+          </button>
+
+          <div class="navbar-actions ms-auto">
+            <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme" title="Switch color theme">
+              <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
+            </button>
+
+            <div class="dropdown">
+              <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <img class="avatar-img avatar-sm" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
+                <span class="d-none d-sm-inline"><?= htmlspecialchars($nama_admin); ?></span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
+              </ul>
+            </div>
+          </div>
         </div>
       </nav>
 
@@ -129,7 +170,7 @@ if (isset($_POST['submit'])) {
                 </div>
               <?php endif; ?>
 
-              <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+              <div class="card border-0 shadow-sm rounded-3 p-4">
                 <form action="" method="POST" autocomplete="off">
                   
                   <div class="mb-4">
@@ -156,7 +197,7 @@ if (isset($_POST['submit'])) {
                     <input type="hidden" id="id_buku" name="id_buku" required>
                     <datalist id="list_buku">
                       <?php while($row_bku = mysqli_fetch_assoc($query_buku)): ?>
-                        <option data-id="<?= $row_bku['id_buku']; ?>" value="<?= htmlspecialchars($row_bku['judul']); ?> [Sisa Stok: <?= $row_bku['stok_tersedia']; ?>]"></option>
+                        <option data-id="<?= $row_bku['id_buku']; ?>" value="<?= htmlspecialchars($row_bku['judul']); ?> (Buku Tersedia: <?= $row_bku['stok_tersedia']; ?>)"></option>
                       <?php endwhile; ?>
                     </datalist>
                     <div class="form-text text-muted">Ketik kata kunci judul buku lalu pilih dari daftar tersemat.</div>

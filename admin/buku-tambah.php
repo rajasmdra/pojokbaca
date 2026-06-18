@@ -111,11 +111,6 @@ if (isset($_POST['submit'])) {
           <span class="nav-text">Peminjaman</span>
         </a>
         
-        <a class="nav-link" href="pengembalian.php">
-          <span class="nav-icon"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></span>
-          <span class="nav-text">Pengembalian</span>
-        </a>
-        
         <a class="nav-link" href="denda.php">
           <span class="nav-icon"><i class="bi bi-cash-coin" aria-hidden="true"></i></span>
           <span class="nav-text">Data Denda</span>
@@ -127,9 +122,9 @@ if (isset($_POST['submit'])) {
             <span class="nav-text">Kelola</span>
           </a>
           <div class="collapse ms-3" id="menuKelola">
-            <a class="nav-link py-1 small" href="kelola/kategori.php"><i class="bi bi-tags me-2"></i>Kategori</a>
-            <a class="nav-link py-1 small" href="kelola/penerbit.php"><i class="bi bi-building me-2"></i>Penerbit</a>
-            <a class="nav-link py-1 small" href="kelola/rak.php"><i class="bi bi-bookshelf me-2"></i>Data Rak</a>
+            <a class="nav-link py-1 small" href="kategori.php"><i class="bi bi-tags me-2"></i>Kategori</a>
+            <a class="nav-link py-1 small" href="penerbit.php"><i class="bi bi-building me-2"></i>Penerbit</a>
+            <a class="nav-link py-1 small" href="rak.php"><i class="bi bi-bookshelf me-2"></i>Data Rak</a>
           </div>
         </div>
         
@@ -155,6 +150,10 @@ if (isset($_POST['submit'])) {
           </button>
 
           <div class="navbar-actions ms-auto">
+            <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme" title="Switch color theme">
+              <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
+            </button>
+
             <div class="dropdown">
               <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <img class="avatar-img avatar-sm" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">

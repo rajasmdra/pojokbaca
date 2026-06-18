@@ -92,11 +92,6 @@ $total_denda_aktif = $data_denda['total'] ?? 0;
           <span class="nav-text">Peminjaman</span>
         </a>
         
-        <a class="nav-link" href="pengembalian.php">
-          <span class="nav-icon"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></span>
-          <span class="nav-text">Pengembalian</span>
-        </a>
-        
         <a class="nav-link" href="denda.php">
           <span class="nav-icon"><i class="bi bi-cash-coin" aria-hidden="true"></i></span>
           <span class="nav-text">Data Denda</span>
@@ -122,10 +117,15 @@ $total_denda_aktif = $data_denda['total'] ?? 0;
         </a>
       </nav>
 
-      <div class="sidebar-user">
+      <div class="sidebar-user d-none">
         <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
         <strong><?= htmlspecialchars($nama_admin); ?></strong>
         <small>Super Admin</small>
+      </div>
+      <div class="sidebar-user">
+        <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
+        <strong><?= htmlspecialchars($nama_admin); ?></strong>
+        <small>Admin</small>
       </div>
 
       <div class="sidebar-footer">
@@ -149,7 +149,7 @@ $total_denda_aktif = $data_denda['total'] ?? 0;
             <div class="dropdown">
               <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <img class="avatar-img avatar-sm" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
-                <span class="profile-name d-none d-sm-inline"><?= htmlspecialchars($nama_admin); ?></span>
+                <span class="d-none d-sm-inline"><?= htmlspecialchars($nama_admin); ?></span>
               </button>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
@@ -206,7 +206,7 @@ $total_denda_aktif = $data_denda['total'] ?? 0;
                 </div>
                 <div class="metric-value"><?= $total_anggota; ?></div>
                 <div class="metric-meta">
-                  <span>Siswa/Anggota aktif</span>
+                  <span>Anggota aktif</span>
                 </div>
               </article>
             </div>
