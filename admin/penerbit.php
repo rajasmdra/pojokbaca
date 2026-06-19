@@ -99,8 +99,8 @@ $next_order = (strtoupper($sort_order) == 'ASC') ? 'DESC' : 'ASC';
 function getSortIcon($column, $current_by, $current_order) {
     if ($current_by === $column) {
         return (strtoupper($current_order) === 'ASC') 
-            ? '<i class="bi bi-caret-down-fill text-secondary ms-1" style="font-size: 0.8rem;"></i>' 
-            : '<i class="bi bi-caret-up-fill text-secondary ms-1" style="font-size: 0.8rem;"></i>';
+            ? '<i class="bi bi-caret-down-fill ms-1" style="font-size: 0.8rem;"></i>' 
+            : '<i class="bi bi-caret-up-fill ms-1" style="font-size: 0.8rem;"></i>';
     }
     return '<i class="bi bi-caret-down text-muted opacity-25 ms-1" style="font-size: 0.8rem;"></i>';
 }
@@ -173,7 +173,7 @@ $query_tabel = mysqli_query($mysqli, "SELECT * FROM penerbit ORDER BY $orderby_s
         </div>
 
         <hr class="mx-3 my-2 text-secondary opacity-25">
-        <a class="nav-link text-danger" href="../logout.php"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
+        <a class="nav-link text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
       </nav>
 
       <div class="sidebar-user d-none">
@@ -208,7 +208,7 @@ $query_tabel = mysqli_query($mysqli, "SELECT * FROM penerbit ORDER BY $orderby_s
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
+                <li><a class="dropdown-item text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
               </ul>
             </div>
           </div>
@@ -305,8 +305,8 @@ $query_tabel = mysqli_query($mysqli, "SELECT * FROM penerbit ORDER BY $orderby_s
                       ?>
                         <tr class="<?= ($edit_mode && $val_id_penerbit == $row['id_penerbit']) ? 'table-warning opacity-75' : ''; ?>">
                           <td class="text-muted small"><?= $no++; ?>.</td>
-                          <td class="fw-semibold">
-                            <i class="bi bi-building text-secondary me-2 small"></i><?= htmlspecialchars($row['nama_penerbit']); ?>
+                          <td class="fw-semibold d-flex align-items-center gap-2">
+                            <span class="brand-icon"><i class="bi bi-building-fill" aria-hidden="true"></i></span><?= htmlspecialchars($row['nama_penerbit']); ?>
                           </td>
                           <td class="text-end">
                             <a href="penerbit.php?id=<?= $row['id_penerbit']; ?>&aksi=edit&by=<?= $sort_by; ?>&order=<?= $sort_order; ?>" class="btn btn-outline-warning btn-sm px-2 py-1 me-1 fw-medium" title="Ubah Data">

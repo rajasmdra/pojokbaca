@@ -37,7 +37,7 @@ $query_anggota = mysqli_query($mysqli, $sql_anggota);
 // Fungsi bantu untuk menampilkan icon panah sort yang aktif di header tabel
 function getSortIcon($column, $current_by, $current_order) {
     if ($column === $current_by) {
-        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill text-dark small"></i>' : ' <i class="bi bi-caret-down-fill text-dark small"></i>';
+        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill small"></i>' : ' <i class="bi bi-caret-down-fill small"></i>';
     }
     return ' <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>';
 }
@@ -68,6 +68,19 @@ function getSortIcon($column, $current_by, $current_order) {
       align-items: center;
       justify-content: space-between;
       gap: 8px;
+    }
+    /* Mengatur tata letak header panel agar input search rapi di kanan */
+    .panel-header-custom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .search-box-custom {
+      max-width: 300px;
+      width: 100%;
     }
   </style>
 </head>
@@ -109,14 +122,9 @@ function getSortIcon($column, $current_by, $current_order) {
         </div>
 
         <hr class="mx-3 my-2 text-secondary opacity-25">
-        <a class="nav-link text-danger" href="../logout.php"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
+        <a class="nav-link text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
       </nav>
       
-      <div class="sidebar-user d-none">
-        <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="User">
-        <strong><?= htmlspecialchars($nama_admin); ?></strong>
-        <small>Admin</small>
-      </div>
       <div class="sidebar-user">
         <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="User">
         <strong><?= htmlspecialchars($nama_admin); ?></strong>
@@ -144,7 +152,7 @@ function getSortIcon($column, $current_by, $current_order) {
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
+                <li><a class="dropdown-item text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
               </ul>
             </div>
           </div>
@@ -166,11 +174,21 @@ function getSortIcon($column, $current_by, $current_order) {
           </div>
 
           <div class="panel border-0 shadow-sm overflow-hidden p-4">
+            
+            <div class="panel-header-custom">
+              <div>
+                <h2 class="h5 mb-1 section-title"><i class="bi bi-people" aria-hidden="true"></i><span>Daftar Seluruh Anggota</span></h2>
+              </div>
+              <div class="search-box-custom">
+                <input class="form-control form-control-sm table-search" type="search" placeholder="Cari nama atau email..." data-table-search="anggotaTable" aria-label="Search members">
+              </div>
+            </div>
+
             <div class="table-responsive">
-              <table class="table align-middle text-dark mb-0">
+              <table class="table align-middle text-dark mb-0 table-hover" id="anggotaTable" data-searchable-table>
                 <thead>
                   <tr>
-                    <th>No</th>
+                    <th style="width: 60px;">No</th>
                     <th class="sortable-header">
                       <a href="anggota.php?by=nama_lengkap&order=<?= ($sort_by == 'nama_lengkap') ? $next_order : 'ASC'; ?>">
                         Nama Anggota <?= getSortIcon('nama_lengkap', $sort_by, $sort_order); ?>
@@ -195,32 +213,34 @@ function getSortIcon($column, $current_by, $current_order) {
                   ?>
                     <tr>
                       <td><?= $no++; ?></td>
-                      <td class="fw-semibold text-primary d-flex align-items-center gap-2">
-                        <span class="brand-icon"><i class="bi bi-person-fill fs-4"></i></span>
-                        <?= htmlspecialchars($row['nama_lengkap'] ?? ($row['nama'] ?? '')); ?>
+                      <td class="fw-semibold text-primary">
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="brand-icon"><i class="bi bi-person-fill fs-4"></i></span>
+                          <?= htmlspecialchars($row['nama_lengkap'] ?? ($row['nama'] ?? '')); ?>
+                        </div>
                       </td>
                       <td><?= htmlspecialchars($row['email']); ?></td>
                       <td><?= htmlspecialchars($row['no_telepon'] ?? '-'); ?></td>
                       <td>
                         <?php if ($status === 'approved'): ?>
-                          <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1.5">Aktif</span>
+                          <span class="badge bg-success text-white px-2 py-1.5">Aktif</span>
                         <?php elseif ($status === 'pending'): ?>
-                          <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1.5">Ditunda</span>
+                          <span class="badge bg-warning text-dark px-2 py-1.5">Ditunda</span>
                         <?php else: ?>
-                          <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1.5">Ditolak</span>
+                          <span class="badge bg-danger text-white px-2 py-1.5">Ditolak</span>
                         <?php endif; ?>
                       </td>
                       <td class="text-center">
                         <div class="d-flex justify-content-center gap-1">
                           <?php if ($status === 'pending'): ?>
-                            <a href="anggota-status.php?id=<?= $row['id_anggota']; ?>&action=approve" class="btn btn-sm btn-success px-2 py-1 small" title="Setujui Pendaftaran" onclick="return confirm('Setujui pendaftaran anggota ini?')">
+                            <a href="anggota-status.php?id=<?= $row['id_anggota']; ?>&action=approve" class="btn btn-outline-success btn-sm px-2 py-1 fw-medium" title="Setujui Pendaftaran" onclick="return confirm('Setujui pendaftaran anggota ini?')">
                               <i class="bi bi-check-circle me-1"></i> Setujui
                             </a>
-                            <a href="anggota-status.php?id=<?= $row['id_anggota']; ?>&action=reject" class="btn btn-sm btn-warning px-2 py-1 small" title="Tolak Pendaftaran" onclick="return confirm('Tolak pendaftaran anggota ini?')">
+                            <a href="anggota-status.php?id=<?= $row['id_anggota']; ?>&action=reject" class="btn btn-outline-warning btn-sm px-2 py-1 fw-medium" title="Tolak Pendaftaran" onclick="return confirm('Tolak pendaftaran anggota ini?')">
                               <i class="bi bi-x-circle me-1"></i> Tolak
                             </a>
                           <?php else: ?>
-                            <a href="anggota-status.php?id=<?= $row['id_anggota']; ?>&action=delete" class="btn btn-sm btn-danger px-2 py-1" title="Hapus Permanen" onclick="return confirm('Apakah Anda yakin ingin menghapus data data anggota ini secara permanen?')">
+                            <a href="anggota-status.php?id=<?= $row['id_anggota']; ?>&action=delete" class="btn btn-outline-danger btn-sm px-2 py-1 fw-medium" title="Hapus Permanen" onclick="return confirm('Apakah Anda yakin ingin menghapus data data anggota ini secara permanen?')">
                               <i class="bi bi-trash"></i> Hapus
                             </a>
                           <?php endif; ?>

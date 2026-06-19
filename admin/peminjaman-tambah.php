@@ -116,7 +116,7 @@ if (isset($_POST['submit'])) {
         </div>
 
         <hr class="mx-3 my-2 text-secondary opacity-25">
-        <a class="nav-link text-danger" href="../logout.php"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
+        <a class="nav-link text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
       </nav>
 
       <div class="sidebar-user d-none">
@@ -151,7 +151,7 @@ if (isset($_POST['submit'])) {
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
+                <li><a class="dropdown-item text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
               </ul>
             </div>
           </div>

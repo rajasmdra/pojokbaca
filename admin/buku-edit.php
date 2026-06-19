@@ -160,7 +160,7 @@ if (isset($_POST['submit'])) {
         </div>
         
         <hr class="mx-3 my-2 text-secondary opacity-25">
-        <a class="nav-link text-danger" href="../logout.php">
+        <a class="nav-link text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')">
           <span class="nav-icon"><i class="bi bi-box-arrow-left text-danger" aria-hidden="true"></i></span>
           <span class="nav-text fw-bold">Logout</span>
         </a>
@@ -198,7 +198,7 @@ if (isset($_POST['submit'])) {
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
+                <li><a class="dropdown-item text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
               </ul>
             </div>
           </div>
@@ -236,22 +236,22 @@ if (isset($_POST['submit'])) {
               <div class="row g-3">
                 
                 <div class="col-12">
-                  <label for="judul" class="form-label fw-medium text-dark">Judul Buku <span class="text-danger">*</span></label>
+                  <label for="judul" class="form-label fw-medium ">Judul Buku <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" id="judul" name="judul" required value="<?= htmlspecialchars($buku_lama['judul']); ?>" placeholder="Contoh: Belajar PHP MVC untuk Pemula">
                 </div>
 
                 <div class="col-12 col-sm-6">
-                  <label for="isbn" class="form-label fw-medium text-dark">Nomor ISBN</label>
+                  <label for="isbn" class="form-label fw-medium ">Nomor ISBN</label>
                   <input type="text" class="form-control" id="isbn" name="isbn" value="<?= htmlspecialchars($buku_lama['isbn']); ?>" placeholder="Contoh: 978-602-8512-xx-x">
                 </div>
 
                 <div class="col-12 col-sm-6">
-                  <label for="penulis" class="form-label fw-medium text-dark">Nama Penulis / Pengarang <span class="text-danger">*</span></label>
+                  <label for="penulis" class="form-label fw-medium ">Nama Penulis / Pengarang <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" id="penulis" name="penulis" required value="<?= htmlspecialchars($buku_lama['penulis']); ?>" placeholder="Contoh: Andi Wijaya">
                 </div>
 
                 <div class="col-12 col-sm-4">
-                  <label for="id_kategori" class="form-label fw-medium text-dark">Kategori Genre <span class="text-danger">*</span></label>
+                  <label for="id_kategori" class="form-label fw-medium ">Kategori Genre <span class="text-danger">*</span></label>
                   <select class="form-select" id="id_kategori" name="id_kategori" required>
                     <option value="" disabled>-- Pilih Kategori --</option>
                     <?php 
@@ -265,7 +265,7 @@ if (isset($_POST['submit'])) {
                 </div>
 
                 <div class="col-12 col-sm-4">
-                  <label for="id_penerbit" class="form-label fw-medium text-dark">Penerbit Buku <span class="text-danger">*</span></label>
+                  <label for="id_penerbit" class="form-label fw-medium ">Penerbit Buku <span class="text-danger">*</span></label>
                   <select class="form-select" id="id_penerbit" name="id_penerbit" required>
                     <option value="" disabled>-- Pilih Penerbit --</option>
                     <?php 
@@ -279,22 +279,22 @@ if (isset($_POST['submit'])) {
                 </div>
 
                 <div class="col-12 col-sm-4">
-                  <label for="tahun_terbit" class="form-label fw-medium text-dark">Tahun Terbit <span class="text-danger">*</span></label>
+                  <label for="tahun_terbit" class="form-label fw-medium ">Tahun Terbit <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" id="tahun_terbit" name="tahun_terbit" required min="1900" max="2030" value="<?= htmlspecialchars($buku_lama['tahun_terbit']); ?>" placeholder="Contoh: 2024">
                 </div>
 
                 <div class="col-12 col-sm-4">
-                  <label for="jumlah_halaman" class="form-label fw-medium text-dark">Jumlah Halaman <span class="text-danger">*</span></label>
+                  <label for="jumlah_halaman" class="form-label fw-medium ">Jumlah Halaman <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" id="jumlah_halaman" name="jumlah_halaman" required min="1" value="<?= htmlspecialchars($buku_lama['jumlah_halaman']); ?>" placeholder="Contoh: 350">
                 </div>
 
                 <div class="col-12 col-sm-4">
-                  <label for="stok_total" class="form-label fw-medium text-dark">Stok Koleksi Fisik <span class="text-danger">*</span></label>
+                  <label for="stok_total" class="form-label fw-medium ">Stok Koleksi Fisik <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" id="stok_total" name="stok_total" required min="0" value="<?= htmlspecialchars($buku_lama['stok_total']); ?>" placeholder="Jumlah Buku">
                 </div>
 
                 <div class="col-12 col-sm-4">
-                  <label for="id_rak" class="form-label fw-medium text-dark">Alokasi Rak Lokasi <span class="text-danger">*</span></label>
+                  <label for="id_rak" class="form-label fw-medium ">Alokasi Rak Lokasi <span class="text-danger">*</span></label>
                   <select class="form-select" id="id_rak" name="id_rak" required>
                     <option value="" disabled>-- Pilih Lokasi Rak --</option>
                     <?php 
@@ -308,7 +308,7 @@ if (isset($_POST['submit'])) {
                 </div>
 
                 <div class="col-12">
-                  <label for="sinopsis" class="form-label fw-medium text-dark">Sinopsis / Deskripsi Ringkas Buku</label>
+                  <label for="sinopsis" class="form-label fw-medium ">Sinopsis / Deskripsi Ringkas Buku</label>
                   <textarea class="form-control" id="sinopsis" name="sinopsis" rows="5" placeholder="Tulis deskripsi atau sinopsis singkat buku di sini..."><?= htmlspecialchars($buku_lama['sinopsis']); ?></textarea>
                 </div>
 

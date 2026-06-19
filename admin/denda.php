@@ -97,7 +97,7 @@ $query_denda = mysqli_query($mysqli, $sql_union);
 
 function getSortIcon($column, $current_by, $current_order) {
     if ($column === $current_by) {
-        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill text-dark small"></i>' : ' <i class="bi bi-caret-down-fill text-dark small"></i>';
+        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill small"></i>' : ' <i class="bi bi-caret-down-fill small"></i>';
     }
     return ' <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>';
 }
@@ -263,7 +263,7 @@ function getSortIcon($column, $current_by, $current_order) {
                         Rp <?= number_format($row['total_tagihan'], 0, ',', '.'); ?>
                       </td>
                       <td>
-                        <span class="badge <?= ($row['status_nyata'] == 'lunas') ? 'bg-success' : 'bg-danger'; ?> text-white border <?= ($row['status_nyata'] == 'lunas') ? 'border-success' : 'border-danger'; ?> px-2 py-1 rounded-pill small">
+                        <span class="badge <?= ($row['status_nyata'] == 'lunas') ? 'bg-success' : 'bg-danger'; ?> text-white border <?= ($row['status_nyata'] == 'lunas') ? 'border-success' : 'border-danger'; ?> px-3 py-1.5 small">
                           <i class="bi bi-hourglass-split me-1"></i><?= $row['tipe_denda']; ?>
                         </span>
                       </td>
@@ -274,7 +274,7 @@ function getSortIcon($column, $current_by, $current_order) {
                               <i class="bi bi-check2-all me-1"></i>Selesai
                             </button>
                           <?php else: ?>
-                            <a href="peminjaman.php" class="btn btn-primary btn-sm px-2 py-1" style="font-size: 0.8rem;">
+                            <a href="peminjaman.php" class="btn btn-outline-primary btn-sm px-2 py-1" style="font-size: 0.8rem;">
                               <i class="bi bi-arrow-right me-1"></i>Kembalikan & Lunasi
                             </a>
                           <?php endif; ?>

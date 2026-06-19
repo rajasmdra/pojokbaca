@@ -86,7 +86,7 @@ $query_peminjaman = mysqli_query($mysqli, $sql_peminjaman);
 
 function getSortIcon($column, $current_by, $current_order) {
     if ($column === $current_by) {
-        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill text-dark small"></i>' : ' <i class="bi bi-caret-down-fill text-dark small"></i>';
+        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill small"></i>' : ' <i class="bi bi-caret-down-fill small"></i>';
     }
     return ' <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>';
 }
@@ -145,7 +145,7 @@ function getSortIcon($column, $current_by, $current_order) {
         </div>
 
         <hr class="mx-3 my-2 text-secondary opacity-25">
-        <a class="nav-link text-danger" href="../logout.php"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
+        <a class="nav-link text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
       </nav>
 
       <div class="sidebar-user d-none">
@@ -155,7 +155,7 @@ function getSortIcon($column, $current_by, $current_order) {
       </div>
       <div class="sidebar-user">
         <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
-        strong><?= htmlspecialchars($nama_admin); ?></strong>
+        <strong><?= htmlspecialchars($nama_admin); ?></strong>
         <small>Admin</small>
       </div>
     </aside>
@@ -180,7 +180,7 @@ function getSortIcon($column, $current_by, $current_order) {
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
+                <li><a class="dropdown-item text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
               </ul>
             </div>
           </div>
@@ -262,11 +262,11 @@ function getSortIcon($column, $current_by, $current_order) {
 
                       // Logika Penentuan 3 Status (dipinjam, terlambat, kembali)
                       if ($row['status'] == 'kembali') {
-                          $status_badge = '<span class="badge bg-success text-white border border-success px-2 py-1 rounded-pill small"><i class="bi bi-check-circle me-1"></i>Kembali</span>';
+                          $status_badge = '<span class="badge bg-success text-white px-3 py-1.5 small"><i class="bi bi-check-circle me-1"></i>Kembali</span>';
                       } elseif ($row['status'] == 'dipinjam' && $hari_ini > $row['tgl_jatuh_tempo']) {
-                          $status_badge = '<span class="badge bg-danger text-white border border-danger px-2 py-1 rounded-pill small"><i class="bi bi-exclamation-triangle me-1"></i>Terlambat</span>';
+                          $status_badge = '<span class="badge bg-danger text-white px-3 py-1.5 small"><i class="bi bi-exclamation-triangle me-1"></i>Terlambat</span>';
                       } else {
-                          $status_badge = '<span class="badge bg-warning text-white border border-warning px-2 py-1 rounded-pill small"><i class="bi bi-hourglass-split me-1"></i>Dipinjam</span>';
+                          $status_badge = '<span class="badge bg-warning text-dark px-3 py-1.5 small"><i class="bi bi-hourglass-split me-1"></i>Dipinjam</span>';
                       }
                   ?>
                     <tr>
@@ -284,7 +284,7 @@ function getSortIcon($column, $current_by, $current_order) {
                       <td class="text-end">
                         <div class="d-flex justify-content-end gap-1">
                           <?php if ($row['status'] == 'dipinjam'): ?>
-                            <a href="peminjaman.php?id=<?= $row['id_peminjaman']; ?>&aksi=kembali" class="btn btn-primary btn-sm px-2 py-1" style="font-size: 0.8rem;" onclick="return confirm('Apakah Anda yakin ingin menyelesaikan peminjaman ini?')">
+                            <a href="peminjaman.php?id=<?= $row['id_peminjaman']; ?>&aksi=kembali" class="btn btn-outline-primary btn-sm px-2 py-1" style="font-size: 0.8rem;" onclick="return confirm('Apakah Anda yakin ingin menyelesaikan peminjaman ini?')">
                               <i class="bi bi-arrow-left me-1"></i>Kembalikan
                             </a>
                           <?php else: ?>

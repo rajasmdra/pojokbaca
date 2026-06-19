@@ -59,7 +59,7 @@ $query_buku = mysqli_query($mysqli, "SELECT b.*, k.nama_kategori, r.nama_rak
 // Fungsi bantu untuk menampilkan icon panah sort yang aktif di header
 function getSortIcon($column, $current_by, $current_order) {
     if ($column === $current_by) {
-        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill text-dark small"></i>' : ' <i class="bi bi-caret-down-fill text-dark small"></i>';
+        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill small"></i>' : ' <i class="bi bi-caret-down-fill small"></i>';
     }
     return ' <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>';
 }
@@ -152,7 +152,7 @@ function getSortIcon($column, $current_by, $current_order) {
         </div>
         
         <hr class="mx-3 my-2 text-secondary opacity-25">
-        <a class="nav-link text-danger" href="../logout.php">
+        <a class="nav-link text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')">
           <span class="nav-icon"><i class="bi bi-box-arrow-left text-danger" aria-hidden="true"></i></span>
           <span class="nav-text fw-bold">Logout</span>
         </a>
@@ -190,7 +190,7 @@ function getSortIcon($column, $current_by, $current_order) {
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
+                <li><a class="dropdown-item text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
               </ul>
             </div>
           </div>
@@ -214,7 +214,6 @@ function getSortIcon($column, $current_by, $current_order) {
             <div class="panel-header d-flex flex-wrap justify-content-between align-items-center gap-3">
               <div>
                 <h2 class="h5 mb-1 section-title"><i class="bi bi-table" aria-hidden="true"></i><span>Koleksi Buku Perpustakaan</span></h2>
-                <p class="text-muted mb-0">Klik nama kolom untuk mengurutkan atau gunakan pencarian instan.</p>
               </div>
               <div class="d-flex gap-2 build-actions">
                 <input class="form-control form-control-sm table-search" type="search" placeholder="Cari judul, penulis, rak..." data-table-search="katalogBukuTable" aria-label="Search books" style="max-width: 220px;">
@@ -266,9 +265,9 @@ function getSortIcon($column, $current_by, $current_order) {
 
                       // Format stok murni angka ringkas Total/Tersedia (contoh: 5/4 atau 3/3)
                       if($stok_tersedia > 0) {
-                          $status_badge = '<span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1.5 fs-7 fw-semibold">' . $stok_total . '/' . $stok_tersedia . '</span>';
+                          $status_badge = '<span class="badge bg-success text-white px-3 py-1.5 fs-7 fw-bold">' . $stok_total . '/' . $stok_tersedia . '</span>';
                       } else {
-                          $status_badge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1.5 fs-7 fw-semibold">' . $stok_total . '/' . $stok_tersedia . '</span>';
+                          $status_badge = '<span class="badge bg-danger text-white px-3 py-1.5 fs-7 fw-bold">' . $stok_total . '/' . $stok_tersedia . '</span>';
                       }
                   ?>
                     <tr>
@@ -279,7 +278,7 @@ function getSortIcon($column, $current_by, $current_order) {
                         </div>
                       </td>
                       <td>
-                        <span class="badge rounded-pill bg-light text-dark border px-3 py-2 fw-medium">
+                        <span class="badge fill small bg-light text-dark border px-3 py-2 fw-medium">
                           <?= htmlspecialchars($buku['nama_kategori'] ?? 'Umum'); ?>
                         </span>
                       </td>
@@ -290,7 +289,7 @@ function getSortIcon($column, $current_by, $current_order) {
                         </div>
                       </td>
                       <td>
-                        <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
+                        <span class="badge fill small bg-light text-dark border px-3 py-2">
                           <i class="bi bi-bookshelf text-secondary me-1"></i><?= htmlspecialchars($buku['nama_rak'] ?? 'Tanpa Rak'); ?>
                         </span>
                       </td>
