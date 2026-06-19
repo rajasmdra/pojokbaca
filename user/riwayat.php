@@ -51,7 +51,7 @@ $query_riwayat = mysqli_query($mysqli, "SELECT p.*, b.judul
 // Fungsi bantu untuk menampilkan icon panah sort yang aktif di header
 function getSortIcon($column, $current_by, $current_order) {
     if ($column === $current_by) {
-        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill text-dark small"></i>' : ' <i class="bi bi-caret-down-fill text-dark small"></i>';
+        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill small"></i>' : ' <i class="bi bi-caret-down-fill small"></i>';
     }
     return ' <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>';
 }
@@ -111,7 +111,7 @@ function getSortIcon($column, $current_by, $current_order) {
         </a>
         <a class="nav-link" href="profil.php"><span class="nav-icon"><i class="bi bi-person-badge"></i></span><span class="nav-text">Profil Saya</span></a>
         <hr class="mx-3 my-2 text-secondary opacity-25">
-        <a class="nav-link text-danger" href="../logout.php"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
+        <a class="nav-link text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
       </nav>
       <div class="sidebar-user d-none">
         <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_anggota); ?>">
@@ -129,17 +129,24 @@ function getSortIcon($column, $current_by, $current_order) {
     <div class="admin-main">
       <nav class="navbar admin-navbar navbar-expand bg-white">
         <div class="container-fluid px-3 px-lg-4">
-          <button class="sidebar-toggle" type="button" data-sidebar-toggle><span></span><span></span><span></span></button>
+          <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-controls="adminSidebar" aria-expanded="true" aria-label="Toggle sidebar">
+            <span></span><span></span><span></span>
+          </button>
+
           <div class="navbar-actions ms-auto">
+            <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme" title="Switch color theme">
+              <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
+            </button>
+
             <div class="dropdown">
-              <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <img class="avatar-img avatar-sm" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_anggota); ?>">
                 <span class="d-none d-sm-inline"><?= htmlspecialchars($nama_anggota); ?></span>
               </button>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-left me-2"></i>Sign out</a></li>
+                <li><a class="dropdown-item text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
               </ul>
             </div>
           </div>
@@ -207,13 +214,13 @@ function getSortIcon($column, $current_by, $current_order) {
                       
                       $status = $row['status'];
                       if ($status == 'kembali') {
-                          $badge_status = '<span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>Selesai</span>';
+                          $badge_status = '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Selesai</span>';
                       } elseif ($status == 'dipinjam') {
                           $hari_ini = date('Y-m-d');
                           if ($hari_ini > $row['tgl_jatuh_tempo']) {
-                              $badge_status = '<span class="badge text-bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Terlambat / Denda</span>';
+                              $badge_status = '<span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Terlambat / Denda</span>';
                           } else {
-                              $badge_status = '<span class="badge text-bg-warning text-dark"><i class="bi bi-clock me-1"></i>Sedang Dipinjam</span>';
+                              $badge_status = '<span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Sedang Dipinjam</span>';
                           }
                       } else {
                           $badge_status = '<span class="badge text-bg-dark">'.ucfirst($status).'</span>';

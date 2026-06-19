@@ -14,25 +14,44 @@ if (isset($_POST['proses_register'])) {
     $email        = mysqli_real_escape_string($mysqli, $_POST['email']);
     $no_telepon   = mysqli_real_escape_string($mysqli, $_POST['no_telepon']);
     $alamat       = mysqli_real_escape_string($mysqli, $_POST['alamat']);
-    $password     = mysqli_real_escape_string($mysqli, $_POST['password']); // Ditambahkan escape string untuk keamanan query
+    $password     = mysqli_real_escape_string($mysqli, $_POST['password']); 
     $konfirmasi   = $_POST['confirm_password'];
 
     if ($password !== $konfirmasi) {
         $pesan = "<div class='alert alert-danger small'><i class='bi bi-exclamation-triangle-fill me-1'></i> Konfirmasi password tidak cocok!</div>";
     } else {
-        $cek_email = mysqli_query($mysqli, "SELECT email FROM anggota WHERE email = '$email'");
+        // Cek email beserta status akunnya di database
+        $cek_email = mysqli_query($mysqli, "SELECT status_akun FROM anggota WHERE email = '$email'");
         
         if (mysqli_num_rows($cek_email) > 0) {
-            $pesan = "<div class='alert alert-danger small'><i class='bi bi-exclamation-triangle-fill me-1'></i> Email ini sudah terdaftar! Gunakan email lain.</div>";
+            $data_akun = mysqli_fetch_assoc($cek_email);
+            $status_sekarang = $data_akun['status_akun'];
+
+            if ($status_sekarang == 'approved') {
+                // JIKA APPROVED: Maka sudah terdaftar resmi
+                $pesan = "<div class='alert alert-danger small'><i class='bi bi-exclamation-triangle-fill me-1'></i> Email ini sudah terdaftar dan aktif! Silahkan login.</div>";
+            } elseif ($status_sekarang == 'pending') {
+                // JIKA PENDING: Masih menunggu konfirmasi admin
+                $pesan = "<div class='alert alert-warning small'><i class='bi bi-hourglass-split me-1'></i> Email ini sedang menunggu konfirmasi/persetujuan admin.</div>";
+            } elseif ($status_sekarang == 'rejected') {
+                // JIKA REJECTED: Dianggap belum terdaftar, hapus data lama yang ditolak agar bisa daftar ulang
+                mysqli_query($mysqli, "DELETE FROM anggota WHERE email = '$email'");
+                $eksekusi_daftar = true;
+            }
         } else {
+            // Jika tidak ditemukan di database, otomatis langsung diizinkan daftar
+            $eksekusi_daftar = true;
+        }
+
+        // Proses Insert Data Baru jika lolos validasi status di atas
+        if (isset($eksekusi_daftar) && $eksekusi_daftar === true) {
             $status_awal = 'pending';
 
-            // MEMASUKKAN PASSWORD BERUPA TEKS BIASA LANGSUNG KE DATABASE
             $query = "INSERT INTO anggota (nama_lengkap, email, no_telepon, alamat, password, status_akun) 
                       VALUES ('$nama_lengkap', '$email', '$no_telepon', '$alamat', '$password', '$status_awal')";
             
             if (mysqli_query($mysqli, $query)) {
-                $pesan = "<div class='alert alert-success small'><i class='bi bi-check-circle-fill me-1'></i> Registrasi berhasil! Akun Anda menunggu persetujuan admin. <a href='index.php' class='fw-bold text-decoration-none'>Login di sini</a></div>";
+                $pesan = "<div class='alert alert-success small'><i class='bi bi-check-circle-fill me-1'></i> Registrasi berhasil! Akun Anda sedang menunggu persetujuan admin. <a href='index.php' class='fw-bold text-decoration-none'>Login di sini</a></div>";
             } else {
                 $pesan = "<div class='alert alert-danger small'><i class='bi bi-x-circle-fill me-1'></i> Terjadi kesalahan sistem. Coba lagi nanti.</div>";
             }
@@ -65,7 +84,7 @@ if (isset($_POST['proses_register'])) {
         <div class="mb-4">
           <p class="eyebrow mb-1">Anggota</p>
           <h1 class="h3 mb-1">Daftar Akun</h1>
-          <p class="text-muted mb-0">Lengkapi data diri Anda untuk daftar  anggota.</p>
+          <p class="text-muted mb-0">Lengkapi data diri Anda untuk daftar anggota.</p>
         </div>
         <div class="mb-3">
           <label class="form-label" for="registerName">Nama Lengkap</label>
@@ -81,7 +100,7 @@ if (isset($_POST['proses_register'])) {
         </div>
         <div class="mb-3">
           <label class="form-label" for="registerAddress">Alamat Rumah</label>
-          <input class="form-control" id="registerAddress" name="alamat" rows="2" required placeholder="Masukkan alamat lengkap"></input>
+          <input class="form-control" id="registerAddress" name="alamat" required placeholder="Masukkan alamat lengkap"></input>
         </div>
         <div class="mb-3">
           <label class="form-label" for="registerPassword">Password</label>

@@ -64,7 +64,7 @@ $query_buku = mysqli_query($mysqli, "SELECT b.*, k.nama_kategori, r.nama_rak
 // Fungsi bantu untuk menampilkan icon panah sort yang aktif di header
 function getSortIcon($column, $current_by, $current_order) {
     if ($column === $current_by) {
-        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill text-dark small"></i>' : ' <i class="bi bi-caret-down-fill text-dark small"></i>';
+        return ($current_order === 'ASC') ? ' <i class="bi bi-caret-up-fill small"></i>' : ' <i class="bi bi-caret-down-fill small"></i>';
     }
     return ' <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>';
 }
@@ -146,7 +146,7 @@ function getSortIcon($column, $current_by, $current_order) {
         </a>
         
         <hr class="mx-3 my-2 text-secondary opacity-25">
-        <a class="nav-link text-danger" href="../logout.php">
+        <a class="nav-link text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')">
           <span class="nav-icon"><i class="bi bi-box-arrow-left text-danger" aria-hidden="true"></i></span>
           <span class="nav-text fw-bold">Logout</span>
         </a>
@@ -190,7 +190,7 @@ function getSortIcon($column, $current_by, $current_order) {
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-left me-2"></i>Sign out</a></li>
+                <li><a class="dropdown-item text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
               </ul>
             </div>
           </div>
@@ -261,9 +261,9 @@ function getSortIcon($column, $current_by, $current_order) {
 
                       // Format stok murni angka ringkas Total/Tersedia (contoh: 5/4 atau 3/3)
                       if($stok_tersedia > 0) {
-                          $status_badge = '<span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1.5 fs-7 fw-semibold">' . $stok_total . '/' . $stok_tersedia . '</span>';
+                          $status_badge = '<span class="badge bg-success text-white border border-success px-3 py-1.5 fw-bold">' . $stok_total . '/' . $stok_tersedia . '</span>';
                       } else {
-                          $status_badge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1.5 fs-7 fw-semibold">' . $stok_total . '/' . $stok_tersedia . '</span>';
+                          $status_badge = '<span class="badge bg-danger text-white border border-danger px-3 py-1.5 fw-bold">' . $stok_total . '/' . $stok_tersedia . '</span>';
                       }
                   ?>
                     <tr>
