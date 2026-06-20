@@ -164,11 +164,6 @@ while ($r = mysqli_fetch_assoc($q_rak)) { $labels_rak[] = $r['nama_rak']; $data_
         <strong><?= htmlspecialchars($nama_admin); ?></strong>
         <small>Admin</small>
       </div>
-
-      <div class="sidebar-footer">
-        <span class="status-dot"></span>
-        <span class="sidebar-footer-text">Sistem berjalan lancar</span>
-      </div>
     </aside>
 
     <div class="admin-main">

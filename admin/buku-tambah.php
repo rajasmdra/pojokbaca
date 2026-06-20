@@ -135,6 +135,11 @@ if (isset($_POST['submit'])) {
         </a>
       </nav>
 
+      <div class="sidebar-user d-none">
+        <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
+        <strong><?= htmlspecialchars($nama_admin); ?></strong>
+        <small>Admin</small>
+      </div>
       <div class="sidebar-user">
         <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_admin); ?>">
         <strong><?= htmlspecialchars($nama_admin); ?></strong>

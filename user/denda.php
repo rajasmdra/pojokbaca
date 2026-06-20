@@ -159,15 +159,15 @@ function getSortIcon($column, $current_by, $current_order) {
         </a>
       </nav>
 
-      <div class="sidebar-user">
+      <div class="sidebar-user d-none">
         <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_anggota); ?>">
         <strong><?= htmlspecialchars($nama_anggota); ?></strong>
         <small>Anggota Aktif</small>
       </div>
-
-      <div class="sidebar-footer">
-        <span class="status-dot"></span>
-        <span class="sidebar-footer-text">Sistem berjalan lancar</span>
+      <div class="sidebar-user">
+        <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="<?= htmlspecialchars($nama_anggota); ?>">
+        <strong><?= htmlspecialchars($nama_anggota); ?></strong>
+        <small>Anggota Aktif</small>
       </div>
     </aside>
 

@@ -163,11 +163,6 @@ function getSortIcon($column, $current_by, $current_order) {
         <strong><?= htmlspecialchars($nama_anggota); ?></strong>
         <small>Anggota Aktif</small>
       </div>
-
-      <div class="sidebar-footer">
-        <span class="status-dot"></span>
-        <span class="sidebar-footer-text">Sistem berjalan lancar</span>
-      </div>
     </aside>
 
     <div class="admin-main">

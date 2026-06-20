@@ -125,6 +125,11 @@ function getSortIcon($column, $current_by, $current_order) {
         <a class="nav-link text-danger" href="../logout.php" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun anda?')"><span class="nav-icon"><i class="bi bi-box-arrow-left text-danger"></i></span><span class="nav-text fw-bold">Logout</span></a>
       </nav>
       
+      <div class="sidebar-user d-none">
+        <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="User">
+        <strong><?= htmlspecialchars($nama_admin); ?></strong>
+        <small>Admin</small>
+      </div>
       <div class="sidebar-user">
         <img class="avatar-img avatar-md sidebar-user-avatar" src="../assets/images/avatar/avatar.jpg" alt="User">
         <strong><?= htmlspecialchars($nama_admin); ?></strong>

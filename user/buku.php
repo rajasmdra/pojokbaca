@@ -161,15 +161,15 @@ $is_available  = $stok_tersedia > 0;
 
               <div class="col-12 col-md-8 col-lg-9">
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                  <span class="badge <?= $is_available ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle'; ?> px-3 py-2">
+                  <span class="badge <?= $is_available ? 'bg-success text-white border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle'; ?> px-3 py-2">
                     <?= $is_available ? 'Tersedia Di Perpustakaan' : 'Sedang Kosong'; ?>
                   </span>
-                  <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle px-3 py-2">
+                  <span class="badge bg-white text-dark border border-secondary-subtle px-3 py-2">
                     <i class="bi bi-bookshelf me-1"></i> Lokasi: <?= htmlspecialchars($buku['nama_rak'] ?? 'Belum Ditentukan'); ?>
                   </span>
                 </div>
 
-                <h2 class="h3 text-dark fw-bold mb-1"><?= htmlspecialchars($buku['judul']); ?></h2>
+                <h2 class="h3 fw-bold mb-1"><?= htmlspecialchars($buku['judul']); ?></h2>
                 <p class="text-primary fw-medium mb-4 fs-5">Oleh: <?= htmlspecialchars($buku['penulis'] ?? 'Tidak Diketahui'); ?></p>
 
                 <div class="table-responsive">
@@ -209,7 +209,7 @@ $is_available  = $stok_tersedia > 0;
 
                 <?php if (!empty($buku['sinopsis'])): ?>
                   <div class="mt-4 pt-3 border-top">
-                    <h5 class="text-dark fw-bold mb-2">Sinopsis Buku</h5>
+                    <h5 class="fw-bold mb-2">Sinopsis Buku</h5>
                     <p class="medium lh-base" style="text-align: justify;">
                       <?= nl2br(htmlspecialchars($buku['sinopsis'])); ?>
                     </p>
